@@ -1,8 +1,9 @@
-// Automatic sync. The server (Edge Function "sync", every 10 minutes) fetches new activities from connected services
-// into an inbox and processes them; anything it couldn't finish is processed here the next time the app opens.
-import { sb, state, toast, loadAll } from './main.js?v=1795269537';
-import { decodeFit } from './fit.js?v=1795269537';
-import { importDecoded } from './pipeline.js?v=1795269537';
+// Automatic sync. The server (Edge Function "sync") checks each connected member on their own schedule (every 30 minutes
+// for active members, less often for quiet ones), fetches new activities into an inbox and processes them. Opening the app
+// also asks for a check if the last one was over 10 minutes ago; anything the server couldn't finish is processed here.
+import { sb, state, toast, loadAll } from './main.js?v=1795275528';
+import { decodeFit } from './fit.js?v=1795275528';
+import { importDecoded } from './pipeline.js?v=1795275528';
 
 const $ = id => document.getElementById(id);
 const el = (tag, props = {}, ...kids) => { const e = Object.assign(document.createElement(tag), props); kids.forEach(k => k != null && e.append(k)); return e; };
@@ -31,6 +32,16 @@ export async function processInbox(now = false) {
   return n;
 }
 
+// on opening the app: ask for a check if it's been a while, then import whatever is waiting
+export async function checkOnOpen() {
+  if (!state.user) return;
+  try {
+    const { data: c } = await sb.from('connections').select('last_sync,status').eq('owner', state.user.id).eq('provider', 'intervals').maybeSingle();
+    if (c && (!c.last_sync || Date.now() - Date.parse(c.last_sync) > 10 * 60e3)) await sb.functions.invoke('sync', { body: { mode: 'mine' } });
+  } catch {}
+  await processInbox().catch(() => {});
+}
+
 // Settings → Connected services
 export async function paintConnections() {
   const box = $('connBox'); if (!box || !state.user) return;
@@ -46,7 +57,7 @@ export async function paintConnections() {
     box.append(el('div', { className: c.status === 'error' ? 'connstat bad' : 'connstat' }, c.status === 'error' ? `Problem: ${c.last_error}` : `Connected as ${c.athlete_id} · last checked ${when} · ${count || 0} imported`));
     const now = el('button', { className: 'btn sm primary', type: 'button', textContent: 'Sync now' });
     now.onclick = async () => { now.disabled = true; now.textContent = 'Checking…';
-      const r = await sb.functions.invoke('sync', { body: { mode: 'mine' } });
+      const r = await sb.functions.invoke('sync', { body: { mode: 'mine', force: true } });
       if (r.error) toast('Sync failed: ' + (r.error.message || r.error));
       const n = await processInbox(true); if (!n && !r.error) toast('Nothing new');
       now.disabled = false; now.textContent = 'Sync now'; paintConnections(); };
@@ -65,14 +76,14 @@ export async function paintConnections() {
       const r = await sb.rpc('connect_intervals', { p_athlete: id.value.trim(), p_key: key.value.trim() });
       if (r.error) { msg.textContent = r.error.message; go.disabled = false; return; }
       key.value = '';
-      const s = await sb.functions.invoke('sync', { body: { mode: 'mine' } });
+      const s = await sb.functions.invoke('sync', { body: { mode: 'mine', force: true } });
       if (s.error) msg.textContent = 'Connected, but the first check failed: ' + (s.error.message || s.error);
       await processInbox(true); paintConnections();
     };
     box.append(el('ol', { className: 'connsteps' },
       el('li', {}, 'In ', el('a', { href: 'https://intervals.icu/settings', target: '_blank', rel: 'noopener', textContent: 'intervals.icu settings' }), ', connect your Garmin, COROS or other watch account (free).'),
       el('li', {}, 'In the same settings page, under ', el('b', { textContent: 'Developer Settings' }), ', create an API key and copy it with your athlete ID (shown there, like i123456).'),
-      el('li', {}, 'Paste both here. New activities then arrive in Triven on their own, usually within 10 minutes of your watch syncing.')),
+      el('li', {}, 'Paste both here. New activities then arrive in Triven on their own: straight away when you open the app, and otherwise within about half an hour of your watch syncing.')),
       el('div', { style: 'display:flex;gap:8px;flex-wrap:wrap;align-items:center' }, id, key, go), msg,
       el('div', { className: 'note', textContent: 'Your key is stored where only the sync server can read it, and deleted if you disconnect. Activities that reached intervals.icu from Strava can’t be passed on (Strava’s rules); ones from your watch can.' }));
   }

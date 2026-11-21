@@ -1,5 +1,5 @@
 // Your data: download everything as a zip, or delete the account and all of it.
-import { sb, state, toast, JSZip } from './main.js?v=1795269537';
+import { sb, state, toast, JSZip } from './main.js?v=1795275528';
 
 const $ = id => document.getElementById(id);
 const BUCKETS = ['activity-files', 'activity-streams', 'activity-media', 'avatars'];

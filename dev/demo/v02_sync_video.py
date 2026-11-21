@@ -28,7 +28,7 @@ def scenes(S):
     seq = lambda k, per: [(p, conn, per) for p, _ in S[k]]
     scenes = [
       Title(3, 'Automatic sync with intervals.icu', 'Every workout from your watch, straight into Triven.'),
-      Flow('How it works', [('Your watch', 'Garmin, COROS, Suunto, Wahoo, Polar'), ('intervals.icu', 'free; collects your workouts'), ('Triven', 'checks every 10 minutes')],
+      Flow('How it works', [('Your watch', 'Garmin, COROS, Suunto, Wahoo, Polar'), ('intervals.icu', 'free; collects your workouts'), ('Triven', 'checks regularly, and when you open it')],
            note='intervals.icu is a free training site that already connects to most watch brands. Triven picks up your new workouts from there.', dur=8.5),
       Card('In intervals.icu', [('Create a free account', 'Sign up at intervals.icu with email or Google.'),
                                 ('Connect your watch', 'Settings → Connections → your watch brand, e.g. Garmin Connect.'),
@@ -40,7 +40,7 @@ def scenes(S):
       Screen(seq('typeid', .14) + [(S['typeid'][-1][0], conn, 1.2)], 'Paste your athlete ID…', zoom=1.22, z0=1.22),
       Screen(seq('typekey', .14) + [(S['typekey'][-1][0], conn, 1.0)], '…and your API key.', zoom=1.22, z0=1.22),
       Screen([(S['ready'][0], tuple(S['ready'][1]), 2.4)], 'Click Connect.', zoom=1.22, z0=1.22, focus=conn),
-      Screen([(S['connected'][0], tuple(S['connected'][1]), 4.6)], "That's it. Triven checks intervals.icu every 10 minutes and brings in anything new.", zoom=1.22, z0=1.22, focus=conn),
+      Screen([(S['connected'][0], tuple(S['connected'][1]), 4.6)], "That's it. Triven checks intervals.icu regularly, and straight away when you open the app.", zoom=1.22, z0=1.22, focus=conn),
       Screen([(S['syncnow'][0], tuple(S['syncnow'][1]), 3.6)], 'Just finished a session? Sync now fetches it straight away.', zoom=1.22, z0=1.22, focus=conn),
       Screen([(S['feed2'][0], tuple(S['feed2'][1]), 4.6)], 'New activities land in your feed with maps, charts and training load worked out.', zoom=1.06, dim=False),
       Card('Good to know', ["Workouts that reached intervals.icu from Strava can't be passed on (Strava's rules). Connect your watch to intervals.icu directly.",
