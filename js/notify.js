@@ -1,6 +1,6 @@
 // Notifications bell: kudos, comments, replies, followers, relay invitations, club requests and posts (my_notifications()).
 // Unread = newer than settings.notifSeen, which opening the list moves to now (so it's the same on every device).
-import { sb, state, avatarEl } from './main.js?v=1795312012';
+import { sb, state, avatarEl } from './main.js?v=1795314359';
 
 const el = (tag, props = {}, ...kids) => { const e = Object.assign(document.createElement(tag), props); kids.forEach(k => k != null && e.append(k)); return e; };
 const ago = t => { const s = (Date.now() - Date.parse(t)) / 1000; if (s < 60) return 'just now'; if (s < 3600) return Math.floor(s / 60) + ' min'; if (s < 86400) return Math.floor(s / 3600) + ' h';
