@@ -14,8 +14,8 @@
 //    times with Daniels' formula. As training moves your best efforts, the predictions move.
 //  - Training status: from the trend in fitness (42-day load), how this week compares with what you're used to
 //    (acute:chronic workload ratio, 0.8 to 1.3 is the productive band), form, and whether performance is rising.
-import { vdot } from './vo2.js?v=1795369110';
-import { pmc } from './load.js?v=1795369110';
+import { vdot } from './vo2.js?v=1795369264';
+import { pmc } from './load.js?v=1795369264';
 
 const DAY = 864e5;
 const RUN_M = { '1 mile': 1609.34, '5 km': 5000, '10 km': 10000, '15 km': 15000, '10 mile': 16093.4, 'Half marathon': 21097.5, '30 km': 30000, 'Marathon': 42195 };
