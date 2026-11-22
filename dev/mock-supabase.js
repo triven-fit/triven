@@ -7,7 +7,7 @@ if(window.__seedFiles)Object.assign(files,window.__seedFiles);
 window.__db=db;window.__files=files;
 let n=window.__uuidStart||0;const uuid=()=>'00000000-0000-4000-8000-'+String(++n).padStart(12,'0');
 function q(table){
-  let rng=null,rows=null,filters=[],ord=null,mode='select',payload=null,single=false,maybe=false,cols='*',cnt=null;
+  let rng=null,lim=null,rows=null,filters=[],ord=null,mode='select',payload=null,single=false,maybe=false,cols='*',cnt=null;
   const api={
     select(c='*',o){cols=c;if(o&&o.count)cnt=o;if(mode==='select')mode='select';return api},
     eq(k,v){filters.push(r=>r[k]===v);return api},
@@ -16,13 +16,13 @@ function q(table){
     in(k,v){filters.push(r=>v.includes(r[k]));return api},
     order(k,o={}){if(!ord)ord=[k,o.ascending!==false];return api},
     range(a,b){rng=[a,b];return api},
-    limit(){return api},
+    limit(k){lim=k;return api},
     single(){single=true;return api},
     maybeSingle(){single=true;maybe=true;return api},
     insert(p){mode='insert';payload=Array.isArray(p)?p:[p];return api},
     update(p){mode='update';payload=p;return api},
     delete(){mode='delete';return api},
-    then(res,rej){return Promise.resolve(run()).then(res,rej)},
+    then(res,rej){const d=window.__delay?.(table,{rng,lim,cols,mode})||0;return (d?new Promise(r=>setTimeout(r,d)):Promise.resolve()).then(run).then(res,rej)},
   };
   function run(){
     const T=db[table];
@@ -34,6 +34,8 @@ function q(table){
     if(table==='activities'&&cols.includes('activity_sections('))rs.forEach(r=>r.activity_sections=db.activity_sections.filter(s=>s.activity_id===r.id));
     if(ord)rs.sort((a,b)=>(a[ord[0]]>b[ord[0]]?1:-1)*(ord[1]?1:-1));
     if(rng)rs=rs.slice(rng[0],rng[1]+1);
+    if(lim!=null)rs=rs.slice(0,lim);
+    if(table==='activities'&&cols.includes('summary:summary_lite'))rs.forEach(r=>{const m=r.summary;if(m&&'track' in m){const{track,...rest}=m;r.summary={...rest,start:track?.[0]??null,hasTrack:true}}});
     return fin(rs);
   }
   function fin(rs){if(cnt)return{data:cnt.head?null:rs,count:rs.length,error:null};if(single){if(!rs.length)return maybe?{data:null,error:null}:{data:null,error:{message:'no rows'}};return{data:rs[0],error:null}}return{data:rs,error:null}}
@@ -52,6 +54,7 @@ export function createClient(){
       if(fn==='feed'){const me=db.profiles[0];const own=(window.__feed||db.activities).map(a=>({...a,athlete:me.display_name||'Carl',handle:me.handle||'carl',avatar_path:me.avatar_path||null,sections:db.activity_sections.filter(s=>s.activity_id===a.id).sort((x,y)=>x.idx-y.idx),track:a.summary?.track||null,flags:a.summary?.driving||null,media:db.activity_media.filter(m=>m.activity_id===a.id),kudos:a.kudos??2,comments:a.comments??1,you_kudoed:false,relay:(window.__feedRelay||{})[a.id]||null}));
         const sc=args&&args.scope,oth=(window.__feedOthers||[]).filter(o=>sc&&sc!=='me'&&(!o.scopes||o.scopes.includes(sc)));const all=(sc==='me'||!window.__feedOthers?own:own.concat(oth)).filter(a=>!args||!args.before||a.start_time<args.before).sort((a,b)=>a.start_time<b.start_time?1:-1);return{data:all.slice(0,args&&args.lim||50),error:null}}
       if(fn==='connect_intervals'){db.connections.push({owner:'u1',provider:'intervals',athlete_id:args.p_athlete,status:'ok',created_at:new Date().toISOString()});return{data:null,error:null}}
+      if(fn==='merge_summary'){const a=db.activities.find(x=>x.id===args.aid);if(a)a.summary={...(a.summary||{}),...args.patch};return{data:null,error:null}}
       if(fn==='my_network')return{data:window.__net||[],error:null};
       if(fn==='search_athletes')return{data:(window.__search||[]).map(a=>({...a,you_follow:(db.follows.find(f=>f.followee===a.id)||{}).status||null})),error:null};
       if(fn==='companions')return{data:window.__comp||[],error:null};

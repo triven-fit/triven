@@ -1,13 +1,13 @@
 // Heat on activities: the weather at the activity's time and place (Open-Meteo, free, no key), saved in summary.weather.
 // Only a rounded location (0.1°, about 10 km) and the date are sent. Runs get a heat cost on pace from temperature + dew
 // point (the sum in °F: up to 100 no effect, 150 ≈ 4.5% slower, 180 ≈ 10%, above that hard running isn't advised).
-import { sb, state } from './main.js?v=1795310749';
-import * as U from './units.js?v=1795310749';
+import { sb, state } from './main.js?v=1795312012';
+import * as U from './units.js?v=1795312012';
 
 const el = (tag, props = {}, ...kids) => { const e = Object.assign(document.createElement(tag), props); kids.forEach(k => k != null && e.append(k)); return e; };
 const DAY = 864e5;
 const INDOOR = new Set(['treadmill', 'indoor', 'virtual', 'pool']);
-const where = a => { const p = a.summary?.track?.[0]; return p ? [Math.round(p[0] * 10) / 10, Math.round(p[1] * 10) / 10] : null; };
+const where = a => { const p = a.summary?.start || a.summary?.track?.[0]; return p ? [Math.round(p[0] * 10) / 10, Math.round(p[1] * 10) / 10] : null; };
 const outdoor = a => !a.indoor && !(a.activity_sections || []).every(s => INDOOR.has(s.summary?.env)) && where(a);
 
 // fetch and average the hours the activity covered
@@ -29,7 +29,8 @@ async function ensure(a) {
   if (a.summary?.weather !== undefined || !outdoor(a)) return a.summary?.weather || null;
   let w = null; try { w = await fetchWeather(a); } catch { return null; }   // offline: try another time
   const summary = { ...(a.summary || {}), weather: w || false };          // false: looked, nothing found
-  const r = await sb.from('activities').update({ summary }).eq('id', a.id).eq('owner', state.user.id);
+  // merged on the server: list rows carry a slim summary without the map track, so never write one back whole
+  const r = await sb.rpc('merge_summary', { aid: a.id, patch: { weather: w || false } });
   if (!r.error) { a.summary = summary; const s = state.activities.find(x => x.id === a.id); if (s) s.summary = summary; }
   return w;
 }

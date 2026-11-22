@@ -37,7 +37,7 @@ try:
     pg.reload();pg.wait_for_timeout(3000);check(url()=='/carl/2' and pg.inner_text('#actName').startswith('Ride r2'),'reloading /carl/2 reopens it (via 404.html)')
     pg.goto('http://localhost:8796/log/bests?y=2025');pg.wait_for_timeout(3000)
     check(url()=='/log/bests?y=2025' and '280 W' in pg.inner_text('#logBests'),'a clean address opened directly works: '+url())
-    pg.click('text=Feed');pg.wait_for_timeout(1500);check(url()=='/feed','tab links give clean addresses')
+    pg.click('#tab-feed');pg.wait_for_timeout(1500);check(url()=='/feed','tab links give clean addresses: '+url())
     pg.goto('http://localhost:8796/carl');pg.wait_for_timeout(3000);check(url()=='/carl' and pg.is_visible('#view-profile'),'profile at /carl')
     pg.goto('http://localhost:8796/nosuch/thing/here');pg.wait_for_timeout(2500);check(url()=='/feed','unknown address goes home')
     # slow buttons grey out until they finish

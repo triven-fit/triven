@@ -1,7 +1,7 @@
 // Race history on a race's page: your other races at the same event, side by side with every leg and transition.
 // Same event = both flagged as races, same sport (and multisport type), starts within 3 km, distance within 10%.
-import { state } from './main.js?v=1795310749';
-import * as U from './units.js?v=1795310749';
+import { state } from './main.js?v=1795312012';
+import * as U from './units.js?v=1795312012';
 
 const el = (tag, props = {}, ...kids) => { const e = Object.assign(document.createElement(tag), props); kids.forEach(k => k != null && e.append(k)); return e; };
 const fmtDur = s => { s = Math.round(s); const h = Math.floor(s / 3600), m = Math.floor(s % 3600 / 60), x = s % 60; return h ? `${h}:${String(m).padStart(2, '0')}:${String(x).padStart(2, '0')}` : `${m}:${String(x).padStart(2, '0')}`; };
@@ -9,7 +9,7 @@ const diff = s => (s < 0 ? '−' : '+') + fmtDur(Math.abs(s));
 const LEG = { swim: 'Swim', bike: 'Bike', run: 'Run', transition: 'T', other: 'Leg' };
 const MON = ['Jan', 'Feb', 'Mar', 'Apr', 'May', 'Jun', 'Jul', 'Aug', 'Sep', 'Oct', 'Nov', 'Dec'];
 
-const start = a => a.summary?.track?.[0];
+const start = a => a.summary?.start || a.summary?.track?.[0];
 const km = (p, q) => { const R = 6371, r = x => x * Math.PI / 180, dLat = r(q[0] - p[0]), dLon = r(q[1] - p[1]); const h = Math.sin(dLat / 2) ** 2 + Math.cos(r(p[0])) * Math.cos(r(q[0])) * Math.sin(dLon / 2) ** 2; return 2 * R * Math.asin(Math.sqrt(h)); };
 const total = a => a.sport === 'multi' ? +a.elapsed_s : +(a.moving_s || a.elapsed_s);
 export function sameEvent(a, b) {
