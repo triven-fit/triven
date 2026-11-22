@@ -1,6 +1,6 @@
 // People tab: find and follow athletes, follow requests, followers/following, and clubs (clubs.js).
-import { sb, state, toast, avatarEl } from './main.js?v=1795314359';
-import { clubsCard } from './clubs.js?v=1795314359';
+import { sb, state, toast, avatarEl } from './main.js?v=1795367753';
+import { clubsCard } from './clubs.js?v=1795367753';
 
 const el = (tag, props = {}, ...kids) => { const e = Object.assign(document.createElement(tag), props); kids.forEach(k => e.append(k)); return e; };
 const MON = ['Jan', 'Feb', 'Mar', 'Apr', 'May', 'Jun', 'Jul', 'Aug', 'Sep', 'Oct', 'Nov', 'Dec'];

@@ -1,5 +1,5 @@
 // Training log: period totals, fitness, volume chart, calendar, bests, gear.
-import * as U from './units.js?v=1795314359';
+import * as U from './units.js?v=1795367753';
 const $=id=>document.getElementById(id), css=n=>getComputedStyle(document.documentElement).getPropertyValue(n).trim();
 let bound=false;
 export function mountLog(D){
