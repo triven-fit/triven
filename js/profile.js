@@ -1,10 +1,11 @@
 // Profile pages (triven.fit/<username>) and short links (triven.fit/<username>/<n>). Members only.
-import { sb, state, toast, avatarEl } from './main.js?v=1795275528';
-import { feedList } from './feed.js?v=1795275528';
-import { followBtn } from './club.js?v=1795275528';
-import * as U from './units.js?v=1795275528';
-import { rememberLink } from './urls.js?v=1795275528';
-import { RUN_DISTANCES, SWIM_DISTANCES } from './process.js?v=1795275528';
+import { garminNote } from './garmin.js?v=1795310749';
+import { sb, state, toast, avatarEl } from './main.js?v=1795310749';
+import { feedList } from './feed.js?v=1795310749';
+import { followBtn } from './club.js?v=1795310749';
+import * as U from './units.js?v=1795310749';
+import { rememberLink } from './urls.js?v=1795310749';
+import { RUN_DISTANCES, SWIM_DISTANCES } from './process.js?v=1795310749';
 
 const el = (tag, props = {}, ...kids) => { const e = Object.assign(document.createElement(tag), props); kids.forEach(k => k != null && e.append(k)); return e; };
 const fmtDur = s => { s = Math.round(s); const h = Math.floor(s / 3600), m = Math.floor(s % 3600 / 60), x = s % 60; return h ? `${h}:${String(m).padStart(2, '0')}:${String(x).padStart(2, '0')}` : `${m}:${String(x).padStart(2, '0')}`; };
@@ -85,6 +86,7 @@ export async function mountProfile(uid) {
     el('div', { className: 'profbests' }, ...list.map(b => el('a', { href: '#a/' + b.activity, title: new Date(b.at).toLocaleDateString() }, el('small', { textContent: b.effort }), el('b', { textContent: f(b) }))))));
   grid.append(best);
   v.append(grid);
+  v.append(garminNote(null, true));   // totals and bests above may come from Garmin devices
   // activities
   const list = el('div', { className: 'feed' });
   v.append(el('h3', { className: 'profh', textContent: p.me ? 'Your activities' : 'Activities' }), list);

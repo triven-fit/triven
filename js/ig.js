@@ -1,9 +1,10 @@
 // One-tap Instagram image: route over a map (or your photo, or transparent sticker), activity type, title and stats.
-import { drawRouteMap } from './mapcanvas.js?v=1795275528';
-import { envLabel } from './process.js?v=1795275528';
-import * as U from './units.js?v=1795275528';
-import { openModal } from './edit.js?v=1795275528';
-import { toast } from './main.js?v=1795275528';
+import { drawRouteMap } from './mapcanvas.js?v=1795310749';
+import { envLabel } from './process.js?v=1795310749';
+import { mainDevice } from './garmin.js?v=1795310749';
+import * as U from './units.js?v=1795310749';
+import { openModal } from './edit.js?v=1795310749';
+import { toast } from './main.js?v=1795310749';
 
 const el = (tag, props = {}, ...kids) => { const e = Object.assign(document.createElement(tag), props); kids.forEach(k => e.append(k)); return e; };
 const MON = ['Jan', 'Feb', 'Mar', 'Apr', 'May', 'Jun', 'Jul', 'Aug', 'Sep', 'Oct', 'Nov', 'Dec'];
@@ -107,6 +108,9 @@ export async function renderIg(a, { style = 'map', size = 'post', photoUrl = nul
   st.forEach(([v, u], i) => { const x = 70 + i * colW;
     ctx.fillStyle = textCol; ctx.font = '700 72px "Barlow Semi Condensed"'; ctx.fillText(String(v), x, sy - 34);
     ctx.fillStyle = subCol; ctx.font = '500 28px Inter'; ctx.fillText(u, x, sy + 4); });
+  // recording device, bottom right: Garmin's guidelines need "Garmin <model>" on every shared image of Garmin data
+  const dev = mainDevice(a.device);
+  if (dev) { ctx.save(); ctx.fillStyle = subCol; ctx.font = '500 24px Inter'; ctx.textAlign = 'right'; ctx.fillText(dev, W - 70, H - 36); ctx.restore(); }
   // multisport: section bar with times
   if (a.sport === 'multi' && a.sections?.length) {
     shadow(false);

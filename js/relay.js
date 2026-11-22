@@ -1,9 +1,10 @@
 // Relays: separate activities from people who follow each other, shown as one race.
 // Each person's activity stays theirs (totals, bests, load); the relay is a shared view on top.
-import { sb, state, toast, avatarEl, raceFlag } from './main.js?v=1795275528';
-import { drawRouteMap } from './mapcanvas.js?v=1795275528';
-import * as U from './units.js?v=1795275528';
-import { openModal } from './edit.js?v=1795275528';
+import { garminNote } from './garmin.js?v=1795310749';
+import { sb, state, toast, avatarEl, raceFlag } from './main.js?v=1795310749';
+import { drawRouteMap } from './mapcanvas.js?v=1795310749';
+import * as U from './units.js?v=1795310749';
+import { openModal } from './edit.js?v=1795310749';
 
 const el = (tag, props = {}, ...kids) => { const e = Object.assign(document.createElement(tag), props); kids.forEach(k => k != null && e.append(k)); return e; };
 const MON = ['Jan', 'Feb', 'Mar', 'Apr', 'May', 'Jun', 'Jul', 'Aug', 'Sep', 'Oct', 'Nov', 'Dec'];
@@ -147,7 +148,7 @@ export async function mountRelay(id) {
       el('div', { className: 'legend' }, ...[...new Set(L.map(l => l.sport))].map(s => el('span', {}, el('i', { style: `background:${SPC[s]}` }), SPN[s])))));
     drawRouteMap(cv.getContext('2d'), rt.track, 0, 0, 1000, 760, { dark: dark(), pad: 50, sectionSports: rt.sports, width: 6 });
   }
-  v.append(grid);
+  v.append(grid, garminNote(null, true));
 }
 
 // ---------- making a relay from your activity ----------

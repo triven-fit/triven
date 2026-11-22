@@ -1,14 +1,15 @@
 // Feeds: Me (your activities), Club (you and club mates), Everyone (public activities from all Triven athletes).
-import { sb, state, toast, fetchActivity, VIS, raceFlag, avatarEl } from './main.js?v=1795275528';
-import { mountWeek } from './week.js?v=1795275528';
-import { envLabel } from './process.js?v=1795275528';
-import { rememberLink } from './urls.js?v=1795275528';
-import { tempTxt } from './weather.js?v=1795275528';
-import * as U from './units.js?v=1795275528';
-import { drawRouteMap } from './mapcanvas.js?v=1795275528';
-import { openEditor, mediaUrls, lightbox } from './edit.js?v=1795275528';
-import { openTrim } from './trim.js?v=1795275528';
-import { relayCard, relayInvites } from './relay.js?v=1795275528';
+import { sb, state, toast, fetchActivity, VIS, raceFlag, avatarEl } from './main.js?v=1795310749';
+import { mountWeek } from './week.js?v=1795310749';
+import { envLabel } from './process.js?v=1795310749';
+import { rememberLink } from './urls.js?v=1795310749';
+import { tempTxt } from './weather.js?v=1795310749';
+import { mainDevice, garminNote } from './garmin.js?v=1795310749';
+import * as U from './units.js?v=1795310749';
+import { drawRouteMap } from './mapcanvas.js?v=1795310749';
+import { openEditor, mediaUrls, lightbox } from './edit.js?v=1795310749';
+import { openTrim } from './trim.js?v=1795310749';
+import { relayCard, relayInvites } from './relay.js?v=1795310749';
 
 const el = (tag, props = {}, ...kids) => { const e = Object.assign(document.createElement(tag), props); kids.forEach(k => k != null && e.append(k)); return e; };
 const MON = ['Jan', 'Feb', 'Mar', 'Apr', 'May', 'Jun', 'Jul', 'Aug', 'Sep', 'Oct', 'Nov', 'Dec'];
@@ -29,6 +30,7 @@ export async function mountFeed(sc) {
   const side = el('aside', { className: 'feedside', ariaLabel: 'You and this week' });
   v.append(el('div', { className: 'feedgrid' }, side, el('div', { className: 'feedmain' }, bar, invites, list)));
   mountWeek(side);
+  const gn = garminNote(state.activities); if (gn) side.append(gn);
   relayInvites(invites, () => mountFeed(scope));
   await feedList(list, { scope });
 }
@@ -78,6 +80,7 @@ function card(a, urls, refresh) {
   const head = el('div', { className: 'fhead' }, prof ? el('a', { href: prof, className: 'favlink' }, avatarEl(a.athlete, mine ? state.profile?.avatar_path : a.avatar, 38)) : avatarEl(a.athlete, mine ? state.profile?.avatar_path : a.avatar, 38),
     el('div', { style: 'flex:1' }, prof ? el('a', { href: prof, className: 'fwho' }, el('b', { textContent: mine ? 'You' : a.athlete })) : el('b', { textContent: mine ? 'You' : a.athlete }), el('div', { className: 'muted', style: 'font-size:12px', textContent: `${when} · ${type}${mine ? ' · ' + VIS[a.visibility] : ''}` })));
   const c = el('div', { className: 'card fcard' }, head, el('a', { href: '#a/' + a.id, className: 'ftitle' }, a.name, a.is_race ? ' ' : null, a.is_race ? raceFlag(18) : null));
+  const dev = mainDevice(a.device); if (dev) c.append(el('div', { className: 'fdevice', textContent: dev }));   // Garmin attribution sits under the title
   if (a.description) c.append(el('div', { className: 'actdesc', textContent: a.description }));
   // stats
   const stats = el('div', { className: 'fstats' }), stat = (v, l) => stats.append(el('div', {}, el('b', { textContent: v }), el('small', { textContent: l })));

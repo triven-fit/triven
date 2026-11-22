@@ -1,5 +1,6 @@
 // Your data: download everything as a zip, or delete the account and all of it.
-import { sb, state, toast, JSZip } from './main.js?v=1795275528';
+import { deviceLabel } from './garmin.js?v=1795310749';
+import { sb, state, toast, JSZip } from './main.js?v=1795310749';
 
 const $ = id => document.getElementById(id);
 const BUCKETS = ['activity-files', 'activity-streams', 'activity-media', 'avatars'];
@@ -26,8 +27,9 @@ export async function listFiles(bucket, prefix) {
 }
 const csvCell = v => v == null ? '' : /[",\n]/.test(String(v)) ? `"${String(v).replace(/"/g, '""')}"` : String(v);
 function activitiesCsv(acts) {
-  const cols = ['num', 'start_time', 'name', 'sport', 'multisport_profile', 'distance_m', 'moving_s', 'elapsed_s', 'ascent_m', 'avg_hr', 'calories', 'is_race', 'indoor', 'visibility', 'description'];
-  return [cols.join(','), ...acts.map(a => cols.map(c => csvCell(a[c])).join(','))].join('\n');
+  const cols = ['num', 'start_time', 'name', 'sport', 'multisport_profile', 'distance_m', 'moving_s', 'elapsed_s', 'ascent_m', 'avg_hr', 'calories', 'is_race', 'indoor', 'visibility', 'description', 'device'];
+  // the device column is the Garmin attribution Garmin's guidelines ask for on exported data ("Garmin <model>")
+  return [cols.join(','), ...acts.map(a => cols.map(c => csvCell(c === 'device' ? deviceLabel(a.device) : a[c])).join(','))].join('\n');
 }
 
 async function exportData(btn, withFiles) {
@@ -46,7 +48,7 @@ async function exportData(btn, withFiles) {
     rows(() => sb.from('activity_media').select('*').eq('owner', me)),
   ]);
   const j = o => JSON.stringify(o, null, 1);
-  zip.file('README.txt', `Your Triven data, exported ${new Date().toISOString()}.\n\nprofile.json: your profile and settings (thresholds, goals, races).\nactivities.csv: one line per activity.\nactivities.json: everything about each activity, with multisport sections and laps.\ngear.json, best_efforts.json, comments.json, kudos.json, follows.json, clubs.json, club_posts.json, photos.json.\n${withFiles ? 'files/: your original activity files (.fit), the processed data streams, photos and your profile picture.\n' : ''}`);
+  zip.file('README.txt', `Your Triven data, exported ${new Date().toISOString()}.\n\nprofile.json: your profile and settings (thresholds, goals, races).\nactivities.csv: one line per activity (the device column says which watch or computer recorded it; activities from Garmin devices are attributed to Garmin).\nactivities.json: everything about each activity, with multisport sections and laps.\ngear.json, best_efforts.json, comments.json, kudos.json, follows.json, clubs.json, club_posts.json, photos.json.\n${withFiles ? 'files/: your original activity files (.fit), the processed data streams, photos and your profile picture.\n' : ''}`);
   zip.file('profile.json', j({ ...state.profile, email: state.user.email }));
   zip.file('activities.csv', activitiesCsv(acts));
   zip.file('activities.json', j(acts));

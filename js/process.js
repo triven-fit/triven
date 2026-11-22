@@ -1,5 +1,5 @@
-import { snapToTrack, pathLength } from './track.js?v=1795275528';
-import { lengthsIn, poolStats, poolBests } from './swim.js?v=1795275528';
+import { snapToTrack, pathLength } from './track.js?v=1795310749';
+import { lengthsIn, poolStats, poolBests } from './swim.js?v=1795310749';
 // Triven: turn a decoded FIT file into activity rows, streams and best efforts.
 // Pure functions only (no network), so the same code runs in the browser and in tests.
 
@@ -221,7 +221,8 @@ export function processFit(messages, opts = {}) {
     ascent_m: sum('ascent_m') || null, descent_m: sections.reduce((a, s) => a + (s.summary.descent || 0), 0) || null,
     calories: sections.reduce((a, s) => a + (s.summary.calories || 0), 0) || null, avg_hr: hrW ? Math.round(hrW) : null,
     max_hr: Math.max(0, ...sections.map(s => s.max_hr || 0)) || null, indoor,
-    device: [creator.garminProduct || fid.garminProduct || fid.manufacturer, ...sensors].filter(Boolean).map(nice).join(' + ') || null,
+    device: [creator.garminProduct || fid.garminProduct ? (s => /^garmin\b/i.test(s) ? s : 'Garmin ' + s)(nice(creator.garminProduct || fid.garminProduct)) : fid.manufacturer && nice(fid.manufacturer),
+             ...sensors.map(nice)].filter(Boolean).join(' + ') || null,   // Garmin attribution needs "Garmin <model>"
     source: opts.source || 'upload',
     source_id: opts.sourceId || `${fid.manufacturer || 'x'}-${fid.serialNumber || 'x'}-${+(fid.timeCreated || start)}`,
     summary: {

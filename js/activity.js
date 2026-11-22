@@ -1,6 +1,7 @@
 // Activity view: charts, map, zones, FTP, running balance, laps. Mounted with one activity at a time.
-import { srcText } from './athlete.js?v=1795275528';
-import * as U from './units.js?v=1795275528';
+import { deviceLabel } from './garmin.js?v=1795310749';
+import { srcText } from './athlete.js?v=1795310749';
+import * as U from './units.js?v=1795310749';
 const css=n=>getComputedStyle(document.documentElement).getPropertyValue(n).trim();
 let bound=false;
 export function mountActivity(raw,cfgIn,saveCfg){
@@ -52,7 +53,7 @@ const colorOf=sp=>css(sp==='running'?'--run':sp==='cycling'?'--bike':sp==='swimm
 const balTxt=v=>`${v.toFixed(1)}% L / ${(100-v).toFixed(1)}% R`;
 const t0=new Date(raw.meta.start), local=new Date(t0.getTime()+raw.meta.utcOffsetH*3600e3);
 const wk=['Sun','Mon','Tue','Wed','Thu','Fri','Sat'],mo=['Jan','Feb','Mar','Apr','May','Jun','Jul','Aug','Sep','Oct','Nov','Dec'];
-document.getElementById('subline').textContent=`${wk[local.getUTCDay()]} ${local.getUTCDate()} ${mo[local.getUTCMonth()]} ${local.getUTCFullYear()} · ${String(local.getUTCHours()).padStart(2,'0')}:${String(local.getUTCMinutes()).padStart(2,'0')} ${raw.meta.device?' · '+raw.meta.device:''}`;
+document.getElementById('subline').textContent=`${wk[local.getUTCDay()]} ${local.getUTCDate()} ${mo[local.getUTCMonth()]} ${local.getUTCFullYear()} · ${String(local.getUTCHours()).padStart(2,'0')}:${String(local.getUTCMinutes()).padStart(2,'0')} ${raw.meta.device?' · '+deviceLabel(raw.meta.device):''}`;
 const total={elapsed:d3.sum(S,s=>s.elapsed),dist:d3.sum(S,s=>s.dist),cal:d3.sum(S,s=>s.cal),ascent:d3.sum(S,s=>s.ascent),
   avgHr:Math.round(d3.sum(S,s=>s.avgHr?s.avgHr*s.elapsed:0)/(d3.sum(S,s=>s.avgHr?s.elapsed:0)||1))||null,maxHr:d3.max(S,s=>s.maxHr)||null};
 const tEnd=total.elapsed;

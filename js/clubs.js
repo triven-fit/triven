@@ -1,8 +1,9 @@
 // Clubs: list and search, create, club pages (posts from admins, members, the club's activities), invite links, admin settings.
-import { sb, state, toast, avatarEl, avatarUrl } from './main.js?v=1795275528';
-import { openModal } from './edit.js?v=1795275528';
-import { feedList } from './feed.js?v=1795275528';
-import * as U from './units.js?v=1795275528';
+import { garminNote } from './garmin.js?v=1795310749';
+import { sb, state, toast, avatarEl, avatarUrl } from './main.js?v=1795310749';
+import { openModal } from './edit.js?v=1795310749';
+import { feedList } from './feed.js?v=1795310749';
+import * as U from './units.js?v=1795310749';
 
 const el = (tag, props = {}, ...kids) => { const e = Object.assign(document.createElement(tag), props); kids.forEach(k => k != null && e.append(k)); return e; };
 const MON = ['Jan', 'Feb', 'Mar', 'Apr', 'May', 'Jun', 'Jul', 'Aug', 'Sep', 'Oct', 'Nov', 'Dec'];
@@ -258,7 +259,7 @@ function leaderCard(k) {
     rows.forEach((r, i) => list.append(el(r.handle ? 'a' : 'div', { className: 'lbrow' + (r.user_id === state.user.id ? ' me' : ''), href: r.handle ? '#u/' + r.handle : undefined },
       el('span', { className: 'lbrank', textContent: i + 1 }), avatarEl(r.name, r.avatar, 28), el('span', { className: 'lbname', textContent: r.user_id === state.user.id ? 'You' : r.name }),
       el('span', { className: 'lbbar' }, el('i', { style: `width:${Math.max(2, r[key] / top * 100)}%` })), el('b', { textContent: fmt(+r[key]) }), el('small', { className: 'muted', textContent: `${r.n} ${r.n === 1 ? 'activity' : 'activities'}` }))));
-    body.append(list, el('div', { className: 'note', textContent: 'Counts activities shared with the club (never private ones). Multisport races count each leg towards its sport.' }));
+    body.append(list, el('div', { className: 'note', textContent: 'Counts activities shared with the club (never private ones). Multisport races count each leg towards its sport.' }), garminNote(null, true));
   });
   return card;
 }
