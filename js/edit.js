@@ -1,12 +1,12 @@
 // Edit an activity: name, description, visibility, shared fields, gear (per section for multisport), delete. Plus comments.
-import { sb, state, toast, loadAll, renderActHeader, fetchActivity, VIS, reprocess, raceFlag, pickGear } from './main.js?v=1795367753';
-import { linkActivities, importDecoded } from './pipeline.js?v=1795367753';
-import { decodeFit } from './fit.js?v=1795367753';
-import { shareStreams, ENVS, INDOOR } from './process.js?v=1795367753';
-import { openTrim } from './trim.js?v=1795367753';
-import { openIg } from './ig.js?v=1795367753';
-import * as U from './units.js?v=1795367753';
-import { shareButton, linkUrl } from './profile.js?v=1795367753';
+import { sb, state, toast, loadAll, renderActHeader, fetchActivity, VIS, reprocess, raceFlag, pickGear } from './main.js?v=1795368452';
+import { linkActivities, importDecoded } from './pipeline.js?v=1795368452';
+import { decodeFit } from './fit.js?v=1795368452';
+import { shareStreams, ENVS, INDOOR } from './process.js?v=1795368452';
+import { openTrim } from './trim.js?v=1795368452';
+import { openIg } from './ig.js?v=1795368452';
+import * as U from './units.js?v=1795368452';
+import { shareButton, linkUrl } from './profile.js?v=1795368452';
 const dayOf = a => new Date(Date.parse(a.start_time) + (a.utc_offset_min || 0) * 60000).toISOString().slice(0, 10);   // activity's local date
 
 const $ = id => document.getElementById(id);

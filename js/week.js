@@ -1,14 +1,15 @@
 // Feed sidebar: you (photo, follows, latest activity) and this week: days trained, load against a suggested range,
-// a 12-week chart, and weekly goals per sport.
+// a 12-week chart, and weekly goals per sport. Click a bar to see that week's days and numbers; click it again,
+// or "Back to this week", to return.
 //
 // Suggested weekly load range: your chronic load (fitness x 7) times 0.8 to 1.3, the acute:chronic workload ratio
 // band sports science treats as the "sweet spot" (below it fitness drifts, well above it injury risk climbs).
-import { sb, state, toast, avatarEl, raceFlag } from './main.js?v=1795367753';
-import { DEFAULTS } from './settings.js?v=1795367753';
-import * as U from './units.js?v=1795367753';
-import { loadOf, pmc } from './load.js?v=1795367753';
-import { openModal } from './edit.js?v=1795367753';
-import { nextRaceCard } from './races.js?v=1795367753';
+import { sb, state, toast, avatarEl, raceFlag } from './main.js?v=1795368452';
+import { DEFAULTS } from './settings.js?v=1795368452';
+import * as U from './units.js?v=1795368452';
+import { loadOf, pmc } from './load.js?v=1795368452';
+import { openModal } from './edit.js?v=1795368452';
+import { nextRaceCard } from './races.js?v=1795368452';
 
 const el = (tag, props = {}, ...kids) => { const e = Object.assign(document.createElement(tag), props); kids.forEach(k => k != null && e.append(k)); return e; };
 const MONTHS = ['January', 'February', 'March', 'April', 'May', 'June', 'July', 'August', 'September', 'October', 'November', 'December'];
@@ -18,7 +19,7 @@ const fmtHM = s => { const h = Math.floor(s / 3600), m = Math.round(s % 3600 / 6
 const localDay = a => { const d = new Date(Date.parse(a.start_time) + (a.utc_offset_min || 0) * 60000); return Date.UTC(d.getUTCFullYear(), d.getUTCMonth(), d.getUTCDate()); };
 const now = new Date(), TODAY = Date.UTC(now.getFullYear(), now.getMonth(), now.getDate());
 const mondayOf = t => t - ((new Date(t).getUTCDay() + 6) % 7) * DAY;
-let tab = 'all';
+let tab = 'all', sel = null;   // sel: index of the chosen week in the chart (null = this week)
 
 // per-sport distance/time for one activity (multisport legs split out)
 function legs(a) {
@@ -27,7 +28,7 @@ function legs(a) {
 }
 
 export async function mountWeek(host) {
-  host.replaceChildren();
+  host.replaceChildren(); sel = null;
   const cfg = Object.assign({}, DEFAULTS, state.profile?.settings || {});
   const acts = state.activities;
   const nr = nextRaceCard();
@@ -61,24 +62,26 @@ function weekCard(acts, cfg) {
   c.append(tabs);
 
   const wk0 = mondayOf(TODAY), weeks = 12, first = wk0 - (weeks - 1) * 7 * DAY;
-  const W = Array.from({ length: weeks }, (_, i) => ({ t: first + i * 7 * DAY, load: 0, d: 0, time: 0, e: 0 }));
-  const days = Array(7).fill(0);
+  const W = Array.from({ length: weeks }, (_, i) => ({ t: first + i * 7 * DAY, load: 0, d: 0, time: 0, e: 0, days: Array(7).fill(0) }));
   for (const a of acts) {
     const day = localDay(a); if (day < first || day > TODAY) continue;
     const wi = Math.floor((day - first) / (7 * DAY)), L = legs(a).filter(l => tab === 'all' || l.sp === tab);
     if (!L.length) continue;
     const w = W[wi]; L.forEach(l => { w.d += l.d; w.time += l.t; w.e += l.e; });
     const ld = loadOf(a, cfg); w.load += tab === 'all' ? ld.value : (ld.bySport[tab] || 0);
-    if (day >= wk0) days[(day - wk0) / DAY] = 1;
+    w.days[(day - w.t) / DAY] = 1;
   }
-  const cur = W[W.length - 1];
+  const si = sel == null ? W.length - 1 : sel, cur = W[si], isNow = si === W.length - 1;
+  const days = cur.days;
+  const redraw = () => c.replaceWith(weekCard(acts, cfg));
   // week dots
   const dots = el('div', { className: 'wdots' });
   'MTWTFSS'.split('').forEach((ch, i) => dots.append(el('div', {}, el('i', { className: days[i] ? 'on' : '', style: days[i] ? `background:var(${SPV[tab] || '--accent'})` : '' }), el('span', { textContent: ch }))));
 
   let range = null;
   if (tab === 'all') {
-    const series = pmc(acts, cfg, TODAY - 7 * DAY);   // fitness as of the start of this week
+    // fitness going into the week: a week ago for this week, the Sunday before for a past week
+    const series = pmc(acts, cfg, isNow ? TODAY - 7 * DAY : cur.t - DAY);
     const ctl = series.at(-1)?.ctl || 0;
     if (ctl > 3) range = [Math.round(ctl * 7 * 0.8), Math.round(ctl * 7 * 1.3)];
   }
@@ -87,12 +90,15 @@ function weekCard(acts, cfg) {
     el('div', { className: 'wnum' }, el('small', { textContent: 'Suggested' }), el('b', { textContent: range ? `${range[0]}–${range[1]}` : '—' })));
   else head.append(el('div', { className: 'wnum' }, el('small', { textContent: 'Distance' }), el('b', { textContent: U.distBig(cur.d) })),
     el('div', { className: 'wnum' }, el('small', { textContent: 'Time' }), el('b', { textContent: fmtHM(cur.time) })));
-  c.append(el('div', { className: 'sec wtitle', textContent: 'This week' }), head);
+  const wd = new Date(cur.t), title = el('div', { className: 'sec wtitle', textContent: isNow ? 'This week' : `Week of ${wd.getUTCDate()} ${MON[wd.getUTCMonth()]}` });
+  if (!isNow) title.append(el('button', { className: 'linkbtn wback', type: 'button', textContent: 'Back to this week', onclick: () => { sel = null; redraw(); } }));
+  c.append(title, head);
   if (tab === 'all' && range) {
-    const r = cur.load / ((range[0] + range[1]) / 2), msg = cur.load < range[0] ? `${range[0] - Math.round(cur.load)} to go to reach your range` : cur.load > range[1] ? 'Above your usual range: big week, watch the recovery' : 'In your range';
+    const msg = isNow ? (cur.load < range[0] ? `${range[0] - Math.round(cur.load)} to go to reach your range` : cur.load > range[1] ? 'Above your usual range: big week, watch the recovery' : 'In your range')
+      : (cur.load < range[0] ? `Below the range for that week by ${range[0] - Math.round(cur.load)}` : cur.load > range[1] ? 'Above the range for that week' : 'In the range for that week');
     c.append(el('div', { className: 'muted', style: 'font-size:12px;margin-top:2px', textContent: msg }));
   }
-  c.append(chart(W, tab, range));
+  c.append(chart(W, tab, range, si, i => { sel = i === W.length - 1 || i === si && sel != null ? null : i; redraw(); }));
 
   // goals: weekly (settings.goals), monthly (goalsMonth), annual (goalsYear)
   const gl = el('div', { className: 'goals' });
@@ -124,8 +130,9 @@ function weekCard(acts, cfg) {
   return c;
 }
 
-// 12 weekly bars (load for All, distance for a sport) with this week's suggested range shaded
-function chart(W, tab, range) {
+// 12 weekly bars (load for All, distance for a sport) with the chosen week's suggested range shaded; each column is a
+// button (click, or Enter/Space when focused) that picks its week
+function chart(W, tab, range, si, pick) {
   const d3 = window.d3, w = 264, h = 110, m = { l: 4, r: 4, t: 8, b: 18 };
   const val = x => tab === 'all' ? x.load : x.d / 1000;
   const max = Math.max(1, d3.max(W, val), range ? range[1] : 0) * 1.1;
@@ -134,10 +141,15 @@ function chart(W, tab, range) {
   svg.setAttribute('viewBox', `0 0 ${w} ${h}`); svg.setAttribute('width', '100%'); svg.setAttribute('class', 'wchart'); svg.setAttribute('role', 'img');
   svg.setAttribute('aria-label', `Last 12 weeks of ${tab === 'all' ? 'training load' : SPN[tab].toLowerCase() + ' distance'}`);
   const add = (tag, at) => { const e = document.createElementNS(ns, tag); for (const k in at) e.setAttribute(k, at[k]); svg.append(e); return e; };
-  if (range) add('rect', { x: x(W.length - 1) - 2, width: bw + 4, y: y(range[1]), height: y(range[0]) - y(range[1]), rx: 3, class: 'wrange' });
-  W.forEach((wk, i) => { const v = val(wk); const r = add('rect', { x: x(i), width: bw, y: y(v), height: Math.max(v ? 2 : 0, h - m.b - y(v)), rx: 3, class: i === W.length - 1 ? 'wbar cur' : 'wbar' });
-    if (SPV[tab]) r.style.fill = `var(${SPV[tab]})`; if (i !== W.length - 1) r.style.opacity = .45;
-    const t = document.createElementNS(ns, 'title'); const dd = new Date(wk.t); t.textContent = `Week of ${dd.getUTCDate()} ${MON[dd.getUTCMonth()]}: ${tab === 'all' ? Math.round(wk.load) + ' load' : U.dist(wk.d, 1)} · ${fmtHM(wk.time)}`; r.append(t); });
+  if (range) add('rect', { x: x(si) - 2, width: bw + 4, y: y(range[1]), height: y(range[0]) - y(range[1]), rx: 3, class: 'wrange' });
+  W.forEach((wk, i) => { const v = val(wk), dd = new Date(wk.t);
+    const r = add('rect', { x: x(i), width: bw, y: y(v), height: Math.max(v ? 2 : 0, h - m.b - y(v)), rx: 3, class: i === si ? 'wbar cur' : 'wbar' });
+    if (SPV[tab]) r.style.fill = `var(${SPV[tab]})`; if (i !== si) r.style.opacity = .45;
+    // a full-height, see-through hit area so short and empty weeks are easy to click
+    const hit = add('rect', { x: x(i) - 2, width: bw + 4, y: m.t, height: h - m.t - 4, class: 'whit', tabindex: 0, role: 'button',
+      'aria-pressed': i === si, 'aria-label': `Week of ${dd.getUTCDate()} ${MON[dd.getUTCMonth()]}: ${tab === 'all' ? Math.round(wk.load) + ' load' : U.dist(wk.d, 1)}` });
+    hit.addEventListener('click', () => pick(i)); hit.addEventListener('keydown', e => { if (e.key === 'Enter' || e.key === ' ') { e.preventDefault(); pick(i); } });
+    const t = document.createElementNS(ns, 'title'); t.textContent = `Week of ${dd.getUTCDate()} ${MON[dd.getUTCMonth()]}: ${tab === 'all' ? Math.round(wk.load) + ' load' : U.dist(wk.d, 1)} · ${fmtHM(wk.time)}`; hit.append(t); });
   [0, 4, 8, 11].forEach(i => { const dd = new Date(W[i].t); const t = add('text', { x: i === 0 ? x(i) : i === 11 ? x(i) + bw : x(i) + bw / 2, y: h - 4, 'text-anchor': i === 0 ? 'start' : i === 11 ? 'end' : 'middle', class: 'wlab' }); t.textContent = `${dd.getUTCDate()} ${MON[dd.getUTCMonth()]}`; });
   return svg;
 }
