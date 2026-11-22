@@ -1,7 +1,7 @@
 // Log an activity without a file: treadmill, indoor bike, a gym session, or a multisport brick done on machines.
-import { sb, state, toast, loadAll, pickGear, raceFlag } from './main.js?v=1795368452';
-import { ENVS, INDOOR, envLabel, multisportProfile } from './process.js?v=1795368452';
-import * as U from './units.js?v=1795368452';
+import { sb, state, toast, loadAll, pickGear, raceFlag } from './main.js?v=1795369110';
+import { ENVS, INDOOR, envLabel, multisportProfile } from './process.js?v=1795369110';
+import * as U from './units.js?v=1795369110';
 const dayOfAct = (start, off) => new Date(start.getTime() + (off || 0) * 60000).toISOString().slice(0, 10);   // local date, for gear in use that day
 
 const el = (tag, props = {}, ...kids) => { const e = Object.assign(document.createElement(tag), props); kids.forEach(k => k != null && e.append(k)); return e; };

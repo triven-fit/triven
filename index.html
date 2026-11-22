@@ -426,6 +426,7 @@ button.busy{opacity:.6;cursor:progress!important;pointer-events:none}button.busy
 .ddmenu[hidden]{display:none}.dditem{all:unset;box-sizing:border-box;display:flex;align-items:center;gap:6px;padding:8px 10px;border-radius:7px;font-size:13px;cursor:pointer;color:var(--text-primary)}.dditem:hover,.dditem:focus-visible{background:var(--surface-2)}.dditem.busy{opacity:.6}
 .bellwrap{position:relative;display:inline-block}#bellBtn{position:relative}.bellbadge{position:absolute;top:-6px;right:-6px;min-width:17px;height:17px;padding:0 4px;border-radius:9px;background:var(--warn,#e0533d);color:#fff;font-size:10px;font-weight:700;display:grid;place-items:center;line-height:1}
 .bellbadge[hidden]{display:none}.bellpanel{position:absolute;right:0;top:calc(100% + 6px);z-index:40;width:min(380px,92vw);max-height:70vh;overflow:auto;background:var(--surface-1);border:1px solid var(--line);border-radius:12px;box-shadow:0 10px 30px rgba(0,0,0,.2);padding:4px}
+@media (max-width:640px){.bellpanel{position:fixed;left:8px;right:8px;width:auto;top:var(--bellTop,64px);max-height:calc(100dvh - var(--bellTop,64px) - 12px - env(safe-area-inset-bottom))}}
 .bellpanel[hidden]{display:none}.bellhead{padding:8px 10px;border-bottom:1px solid var(--line);margin-bottom:4px}.bellitem{display:grid;grid-template-columns:30px 1fr auto;gap:10px;align-items:center;padding:8px 10px;border-radius:8px;text-decoration:none;color:var(--text-primary);font-size:13px}
 .bellitem:hover{background:var(--surface-2)}.bellitem.new{background:color-mix(in srgb,var(--accent) 10%,transparent)}.belltext{min-width:0;overflow:hidden;display:-webkit-box;-webkit-line-clamp:3;-webkit-box-orient:vertical}.bellitem small{font-size:11px;white-space:nowrap}
 .btn.danger{background:#d64545;color:#fff;border-color:transparent}.btn.danger:disabled{opacity:.45;cursor:not-allowed}
@@ -703,7 +704,7 @@ button.busy{opacity:.6;cursor:progress!important;pointer-events:none}button.busy
   </div>
 </div>
 
-<script type="module" src="/js/main.js?v=1795368452"></script>
+<script type="module" src="/js/main.js?v=1795369110"></script>
 <div id="olderPill" class="olderpill" role="status" hidden>Loading your older activities…</div>
 </body>
 </html>

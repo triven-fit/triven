@@ -1,8 +1,8 @@
 // "Suggest a feature" and "Report a problem": a short form that saves to the feedback table (019).
 // Problems carry the page you were on, the app version, your browser and screen size, so they can be reproduced.
-import { sb, state, toast } from './main.js?v=1795368452';
-import { openModal } from './edit.js?v=1795368452';
-import { curRoute } from './urls.js?v=1795368452';
+import { sb, state, toast } from './main.js?v=1795369110';
+import { openModal } from './edit.js?v=1795369110';
+import { curRoute } from './urls.js?v=1795369110';
 
 const el = (tag, props = {}, ...kids) => { const e = Object.assign(document.createElement(tag), props); kids.forEach(k => k != null && e.append(k)); return e; };
 const STATUS = { new: 'Sent', seen: 'Seen', planned: 'Planned', done: 'Done', wontfix: 'Not planned' };

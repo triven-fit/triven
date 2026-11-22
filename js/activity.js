@@ -1,7 +1,7 @@
 // Activity view: charts, map, zones, FTP, running balance, laps. Mounted with one activity at a time.
-import { deviceLabel } from './garmin.js?v=1795368452';
-import { srcText } from './athlete.js?v=1795368452';
-import * as U from './units.js?v=1795368452';
+import { deviceLabel } from './garmin.js?v=1795369110';
+import { srcText } from './athlete.js?v=1795369110';
+import * as U from './units.js?v=1795369110';
 const css=n=>getComputedStyle(document.documentElement).getPropertyValue(n).trim();
 let bound=false;
 export function mountActivity(raw,cfgIn,saveCfg){

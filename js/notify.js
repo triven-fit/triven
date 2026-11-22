@@ -1,6 +1,6 @@
 // Notifications bell: kudos, comments, replies, followers, relay invitations, club requests and posts (my_notifications()).
 // Unread = newer than settings.notifSeen, which opening the list moves to now (so it's the same on every device).
-import { sb, state, avatarEl } from './main.js?v=1795368452';
+import { sb, state, avatarEl } from './main.js?v=1795369110';
 
 const el = (tag, props = {}, ...kids) => { const e = Object.assign(document.createElement(tag), props); kids.forEach(k => k != null && e.append(k)); return e; };
 const ago = t => { const s = (Date.now() - Date.parse(t)) / 1000; if (s < 60) return 'just now'; if (s < 3600) return Math.floor(s / 60) + ' min'; if (s < 86400) return Math.floor(s / 3600) + ' h';
@@ -52,6 +52,8 @@ function open() {
   items.forEach(n => { const l = line(n);
     panel.append(el('a', { className: 'bellitem' + (Date.parse(n.at) > was ? ' new' : ''), href: l.href, onclick: () => { panel.hidden = true; } },
       avatarEl(n.actor_name || '?', n.actor_avatar, 30), el('span', { className: 'belltext' }, ...l.kids.filter(Boolean)), el('small', { className: 'muted', textContent: ago(n.at) }))); });
+  // on phones the panel spans the screen just under the bell (it's fixed there, so it can't run off the left edge)
+  const bell = document.getElementById('bellBtn'); if (bell) panel.style.setProperty('--bellTop', Math.round(bell.getBoundingClientRect().bottom + 6) + 'px');
   panel.hidden = false;
   markSeen();
 }
