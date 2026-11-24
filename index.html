@@ -113,10 +113,12 @@ button{font:inherit}
 .gridl line{stroke:var(--grid)} .gridl path{stroke:none}
 .readout{position:sticky;top:0;z-index:5;background:var(--surface-1);border-bottom:1px solid var(--line);padding:8px 16px;display:flex;gap:18px;font-size:12px;color:var(--text-secondary);border-radius:12px 12px 0 0;flex-wrap:wrap}
 .readout b{color:var(--text-primary);font-weight:600;font-variant-numeric:tabular-nums}
+.lapscroll{overflow-x:auto;-webkit-overflow-scrolling:touch;margin:0 -4px;padding:0 4px}
 table.laps{width:100%;border-collapse:collapse;font-size:13px;font-variant-numeric:tabular-nums}
 .laps th{text-align:right;font-weight:600;font-size:11px;text-transform:uppercase;letter-spacing:.05em;color:var(--text-muted);padding:6px 8px;border-bottom:1px solid var(--line)}
 .laps td{text-align:right;padding:7px 8px;border-bottom:1px solid var(--grid)}
 .laps th:nth-child(-n+2),.laps td:nth-child(-n+2){text-align:left}
+@media (max-width:600px){table.laps{font-size:12px}.laps th,.laps td{padding:6px 5px;white-space:nowrap}.laps th{font-size:10px;letter-spacing:.02em}.laps tr>:first-child{position:sticky;left:0;background:var(--surface-1);z-index:1}.laps tr.rgap>:first-child{background:var(--surface-2)}}
 tr.lap{cursor:pointer} tr.lap:hover td{background:var(--surface-2)}
 tr.lap.sel td{background:var(--surface-2);font-weight:600}
 .dot{display:inline-block;width:8px;height:8px;border-radius:50%;margin-right:6px;vertical-align:middle}
@@ -602,7 +604,7 @@ button.busy{opacity:.6;cursor:progress!important;pointer-events:none}button.busy
 
   <div class="card" style="margin-top:16px">
     <h2 style="margin-bottom:8px">Laps</h2>
-    <table class="laps" id="laps"></table>
+    <div class="lapscroll"><table class="laps" id="laps"></table></div>
   </div>
   <div class="card" id="comments" style="margin-top:16px"></div>
 </section>
@@ -705,7 +707,7 @@ button.busy{opacity:.6;cursor:progress!important;pointer-events:none}button.busy
   </div>
 </div>
 
-<script type="module" src="/js/main.js?v=1795369264"></script>
+<script type="module" src="/js/main.js?v=1795526551"></script>
 <div id="olderPill" class="olderpill" role="status" hidden>Loading your older activities…</div>
 </body>
 </html>

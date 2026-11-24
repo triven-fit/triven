@@ -1,12 +1,12 @@
 // Edit an activity: name, description, visibility, shared fields, gear (per section for multisport), delete. Plus comments.
-import { sb, state, toast, loadAll, renderActHeader, fetchActivity, VIS, reprocess, raceFlag, pickGear } from './main.js?v=1795369264';
-import { linkActivities, importDecoded } from './pipeline.js?v=1795369264';
-import { decodeFit } from './fit.js?v=1795369264';
-import { shareStreams, ENVS, INDOOR } from './process.js?v=1795369264';
-import { openTrim } from './trim.js?v=1795369264';
-import { openIg } from './ig.js?v=1795369264';
-import * as U from './units.js?v=1795369264';
-import { shareButton, linkUrl } from './profile.js?v=1795369264';
+import { sb, state, toast, loadAll, renderActHeader, fetchActivity, VIS, reprocess, raceFlag, pickGear } from './main.js?v=1795526551';
+import { linkActivities, importDecoded } from './pipeline.js?v=1795526551';
+import { decodeFit } from './fit.js?v=1795526551';
+import { shareStreams, ENVS, INDOOR } from './process.js?v=1795526551';
+import { openTrim } from './trim.js?v=1795526551';
+import { openIg } from './ig.js?v=1795526551';
+import * as U from './units.js?v=1795526551';
+import { shareButton, linkUrl } from './profile.js?v=1795526551';
 const dayOf = a => new Date(Date.parse(a.start_time) + (a.utc_offset_min || 0) * 60000).toISOString().slice(0, 10);   // activity's local date
 
 const $ = id => document.getElementById(id);
@@ -53,10 +53,13 @@ document.addEventListener('triven:activity', e => {
   const tools = $('actTools'); tools.replaceChildren();
   // toolbar: Edit (a menu with the less common actions), Share, Instagram post
   const menu = el('div', { className: 'ddmenu', id: 'actEditMenu', hidden: true, role: 'menu' });
+  // the menu hangs from the button's right edge; on a phone the button can be near the left, so flip it if it would leave the screen
+  const keepOnScreen = m => { m.style.left = m.style.right = ''; const r = m.getBoundingClientRect(), vw = document.documentElement.clientWidth;
+    if (r.left < 8) { m.style.left = '0'; m.style.right = 'auto'; } else if (r.right > vw - 8) { m.style.right = '0'; m.style.left = 'auto'; } };
   const item = (content, onclick, title) => { const b = el('button', { className: 'dditem', type: 'button', role: 'menuitem', title: title || '' }); b.append(...[].concat(content)); b.onclick = e => { menu.hidden = true; return onclick(e); }; menu.append(b); return b; };
   if (mine) {
     const eb = el('button', { className: 'btn sm', type: 'button', textContent: 'Edit ▾', ariaHasPopup: 'menu' });
-    eb.onclick = e => { e.stopPropagation(); menu.hidden = !menu.hidden; };
+    eb.onclick = e => { e.stopPropagation(); menu.hidden = !menu.hidden; if (!menu.hidden) keepOnScreen(menu); };
     tools.append(el('div', { className: 'ddwrap' }, eb, menu));
     item('Edit details', () => openEditor(cur, reopen), 'Name, description, notes, gear, sharing, photos');
     // one click: race or not (and race shoes/bike if you have defaults for races)

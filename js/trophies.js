@@ -1,7 +1,7 @@
 // PB trophies on an activity page: gold, silver or bronze when an effort in this activity was your 1st, 2nd or 3rd best
 // at that distance (runs, swims) or power duration, as things stood on the day: all-time, and within that year (cup marked '25 etc.).
-import { sb, state } from './main.js?v=1795369264';
-import { RUN_DISTANCES, SWIM_DISTANCES, POWER_DURATIONS, BIKE_DISTANCES } from './process.js?v=1795369264';
+import { sb, state } from './main.js?v=1795526551';
+import { RUN_DISTANCES, SWIM_DISTANCES, POWER_DURATIONS, BIKE_DISTANCES } from './process.js?v=1795526551';
 
 const el = (tag, props = {}, ...kids) => { const e = Object.assign(document.createElement(tag), props); kids.forEach(k => k != null && e.append(k)); return e; };
 const fmtDur = s => { s = Math.round(s); const h = Math.floor(s / 3600), m = Math.floor(s % 3600 / 60), x = s % 60; return h ? `${h}:${String(m).padStart(2, '0')}:${String(x).padStart(2, '0')}` : `${m}:${String(x).padStart(2, '0')}`; };
