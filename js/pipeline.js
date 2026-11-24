@@ -1,9 +1,9 @@
 // Turning a decoded FIT file into Triven rows and files. No browser or app state in here, so the same code runs in
 // the app (uploads, trims) and on the server (automatic sync from intervals.icu).
-import { processFit, shareStreams, makeTrack, detectDriving, rows } from './process.js?v=1795526551';
-import { loadData } from './load.js?v=1795526551';
-import { perfData } from './perf.js?v=1795526551';
-import { DEFAULTS } from './defaults.js?v=1795526551';
+import { processFit, shareStreams, makeTrack, detectDriving, rows } from './process.js?v=1795526807';
+import { loadData } from './load.js?v=1795526807';
+import { perfData } from './perf.js?v=1795526807';
+import { DEFAULTS } from './defaults.js?v=1795526807';
 
 // default gear: is_default_for holds roles like "run:road,run:race" (old single values 'run'/'bike' mean everyday)
 export const gearRoles = g => !g.is_default_for ? [] : g.is_default_for === 'run' ? ['run:road'] : g.is_default_for === 'bike' ? ['bike:road'] : g.is_default_for.split(',').filter(Boolean);
@@ -29,25 +29,29 @@ export function enrichOut(out, settings) {
 export const DEFAULT_SHARE = { map: true, hr: true, power: true, pace: true, cadence: true, dynamics: true, description: true };
 const jsonBlob = o => new Blob([JSON.stringify(o)], { type: 'application/json' });
 
-// streams files, then sections / laps / best efforts (replacing any existing ones)
+// streams files, sections / laps / best efforts (replacing any existing ones). Everything goes at once: the uploads start
+// straight away, and when replacing, the old rows are deleted before the new ones go in.
 export async function saveProcessed(sb, uid, id, out, share, gearBySport, replace) {
   const base = `${uid}/${id}`;
-  const ups = await Promise.all([
+  const uploads = Promise.all([
     sb.storage.from('activity-streams').upload(`${base}.full.json`, jsonBlob(out.streams), { upsert: replace }),
     sb.storage.from('activity-streams').upload(`${base}.json`, jsonBlob(shareStreams(out.streams, share)), { upsert: replace }),
   ]);
+  const rows = (async () => {
+    if (replace) {
+      const del = await Promise.all(['activity_sections', 'activity_laps', 'best_efforts'].map(t => sb.from(t).delete().eq('activity_id', id)));
+      const e = del.find(x => x.error); if (e) throw e.error;
+    }
+    const multi = out.activity.sport === 'multi';
+    const secs = out.sections.map(s => ({ ...s, activity_id: id, gear_id: multi && (s.sport === 'run' || s.sport === 'bike') ? gearBySport(s.sport, s.idx) : null }));
+    return Promise.all([
+      sb.from('activity_sections').insert(secs),
+      out.laps.length ? sb.from('activity_laps').insert(out.laps.map(l => ({ ...l, activity_id: id }))) : { error: null },
+      out.bests.length ? sb.from('best_efforts').insert(out.bests.map(b => ({ ...b, activity_id: id, owner: uid }))) : { error: null },
+    ]);
+  })();
+  const [ups, res] = await Promise.all([uploads, rows]);
   const upErr = ups.find(u => u.error); if (upErr) throw upErr.error;
-  if (replace) {
-    const del = await Promise.all(['activity_sections', 'activity_laps', 'best_efforts'].map(t => sb.from(t).delete().eq('activity_id', id)));
-    const e = del.find(x => x.error); if (e) throw e.error;
-  }
-  const multi = out.activity.sport === 'multi';
-  const secs = out.sections.map(s => ({ ...s, activity_id: id, gear_id: multi && (s.sport === 'run' || s.sport === 'bike') ? gearBySport(s.sport, s.idx) : null }));
-  const res = await Promise.all([
-    sb.from('activity_sections').insert(secs),
-    out.laps.length ? sb.from('activity_laps').insert(out.laps.map(l => ({ ...l, activity_id: id }))) : { error: null },
-    out.bests.length ? sb.from('best_efforts').insert(out.bests.map(b => ({ ...b, activity_id: id, owner: uid }))) : { error: null },
-  ]);
   const err = res.find(x => x.error); if (err) throw err.error;
 }
 
@@ -57,31 +61,42 @@ export async function importDecoded(sb, { uid, messages, errors, raw, source, pr
   if (!messages.sessionMesgs?.length) return { status: 'notact' };
   if (errors?.length && !messages.recordMesgs?.length) throw new Error('file is damaged');
   const out = processFit(messages, { source });
-  // the same file arriving twice (upload and sync, or two syncs) is kept once
-  const dup = await sb.from('activities').select('id').eq('owner', uid).eq('source_id', out.activity.source_id).maybeSingle();
+  // the same file arriving twice (upload and sync, or two syncs) is kept once; also skip files already joined into a linked activity
+  const [dup, inLinked] = await Promise.all([
+    sb.from('activities').select('id').eq('owner', uid).eq('source_id', out.activity.source_id).maybeSingle(),
+    sb.from('activities').select('id').eq('owner', uid).contains('summary', { linked: { sourceIds: [out.activity.source_id] } }).limit(1),
+  ]);
   if (dup.data) return { status: 'skip', id: dup.data.id };
-  const inLinked = await sb.from('activities').select('id').eq('owner', uid).contains('summary', { linked: { sourceIds: [out.activity.source_id] } }).limit(1);
   if (inLinked.data?.length) return { status: 'skip', id: inLinked.data[0].id };
   // first activity fills athlete settings from the watch if they were never set
-  let st = { ...(profile.settings || {}) }, settingsChanged = false;
+  let st = { ...(profile.settings || {}) }, settingsChanged = false, saveSettings = null;
   if (!st.fromWatch && out.activity.summary.lthr) {
     const lthr = out.activity.summary.lthr;
     Object.assign(st, { lthrRun: lthr, lthrBike: lthr - 5, maxHr: out.activity.summary.maxHr || st.maxHr, mass: st.massSet ? st.mass : (out.activity.summary.weight || st.mass), fromWatch: true });
-    const r = await sb.from('profiles').update({ settings: st }).eq('id', uid); if (!r.error) settingsChanged = true;
+    saveSettings = sb.from('profiles').update({ settings: st }).eq('id', uid);
   }
   enrichOut(out, st);
   const a = out.activity;
   if (extra) Object.assign(a.summary, extra);
   const day = localDay(a);
   if (a.sport === 'run' || a.sport === 'bike') a.gear_id = pickGearFrom(gear, a.sport, out.sections.find(s => s.sport === a.sport)?.summary?.env, false, day);
-  a.owner = uid; a.visibility = profile.default_visibility || 'club'; a.share = profile.default_share || DEFAULT_SHARE;
-  const ins = await sb.from('activities').insert(a).select('id').single();
+  // the id is made here, so the row can be written with its file paths and everything else saved alongside in one go
+  const id = crypto.randomUUID(), base = `${uid}/${id}`;
+  Object.assign(a, { id, owner: uid, visibility: profile.default_visibility || 'club', share: profile.default_share || DEFAULT_SHARE, file_path: `${base}.fit`, streams_path: `${base}.json` });
+  const [ins, prof] = await Promise.all([sb.from('activities').insert(a), saveSettings]);
   if (ins.error) throw ins.error;
-  const id = ins.data.id, base = `${uid}/${id}`;
-  const up = await sb.storage.from('activity-files').upload(`${base}.fit`, new Blob([raw], { type: 'application/octet-stream' }), { upsert: true });
-  if (up.error) throw up.error;
-  await saveProcessed(sb, uid, id, out, a.share, (sp, idx) => pickGearFrom(gear, sp, out.sections[idx]?.summary?.env, false, day), false);
-  const r2 = await sb.from('activities').update({ file_path: `${base}.fit`, streams_path: `${base}.json` }).eq('id', id); if (r2.error) throw r2.error;
+  if (prof && !prof.error) settingsChanged = true;
+  try {
+    const [up] = await Promise.all([
+      sb.storage.from('activity-files').upload(`${base}.fit`, new Blob([raw], { type: 'application/octet-stream' }), { upsert: true }),
+      saveProcessed(sb, uid, id, out, a.share, (sp, idx) => pickGearFrom(gear, sp, out.sections[idx]?.summary?.env, false, day), false),
+    ]);
+    if (up.error) throw up.error;
+  } catch (e) {   // don't leave a half-saved activity behind: it would block the file being tried again
+    await sb.from('activities').delete().eq('id', id);
+    await sb.storage.from('activity-files').remove([`${base}.fit`]); await sb.storage.from('activity-streams').remove([`${base}.json`, `${base}.full.json`]);
+    throw e;
+  }
   return { status: 'ok', id, activity: a, settings: settingsChanged ? st : null };
 }
 

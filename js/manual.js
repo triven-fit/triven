@@ -1,7 +1,7 @@
 // Log an activity without a file: treadmill, indoor bike, a gym session, or a multisport brick done on machines.
-import { sb, state, toast, loadAll, pickGear, raceFlag } from './main.js?v=1795526551';
-import { ENVS, INDOOR, envLabel, multisportProfile } from './process.js?v=1795526551';
-import * as U from './units.js?v=1795526551';
+import { sb, state, toast, refreshActs, pickGear, raceFlag } from './main.js?v=1795526807';
+import { ENVS, INDOOR, envLabel, multisportProfile } from './process.js?v=1795526807';
+import * as U from './units.js?v=1795526807';
 const dayOfAct = (start, off) => new Date(start.getTime() + (off || 0) * 60000).toISOString().slice(0, 10);   // local date, for gear in use that day
 
 const el = (tag, props = {}, ...kids) => { const e = Object.assign(document.createElement(tag), props); kids.forEach(k => k != null && e.append(k)); return e; };
@@ -106,6 +106,6 @@ export function mountManual(host) {
       distance_m: l.dist || null, ascent_m: l.asc, avg_hr: l.hr, avg_speed: l.dist && l.elapsed ? +(l.dist / l.elapsed).toFixed(3) : null, summary: { env: l.env, manual: true }, gear_id: multi ? pickGear(l.sport, l.env, race.checked, dayOfAct(start, off)) : null }; t += l.elapsed; return s; });
     const r2 = await sb.from('activity_sections').insert(secs);
     if (r2.error) { msg.textContent = 'Saved the activity but not its legs: ' + r2.error.message; save.disabled = false; return; }
-    await loadAll(); toast('Activity logged'); location.hash = '#a/' + ins.data.id;
+    await refreshActs([ins.data.id]); toast('Activity logged'); location.hash = '#a/' + ins.data.id;
   };
 }

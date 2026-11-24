@@ -1,6 +1,6 @@
 // Your data: download everything as a zip, or delete the account and all of it.
-import { deviceLabel } from './garmin.js?v=1795526551';
-import { sb, state, toast, JSZip } from './main.js?v=1795526551';
+import { deviceLabel } from './garmin.js?v=1795526807';
+import { sb, state, toast, JSZip } from './main.js?v=1795526807';
 
 const $ = id => document.getElementById(id);
 const BUCKETS = ['activity-files', 'activity-streams', 'activity-media', 'avatars'];

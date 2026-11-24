@@ -1,8 +1,12 @@
 // Gear tab: shoes and bikes, distance, replacement guide, defaults, retire, bulk-assign.
-import { sb, state, toast, loadAll, gearUsage, GEAR_ROLES, gearRoles } from './main.js?v=1795526551';
-import { openModal } from './edit.js?v=1795526551';
-import { gearFrom } from './pipeline.js?v=1795526551';
-import * as U from './units.js?v=1795526551';
+import { sb, state, toast, refreshGear, gearUsage, GEAR_ROLES, gearRoles } from './main.js?v=1795526807';
+// gear changes are mirrored in the loaded activities rather than reloading the whole history
+const setGear = (ids, to, from) => { const s = new Set(ids); state.activities.forEach(a => {
+  if (s.has(a.id) && (from === undefined || a.gear_id === from)) a.gear_id = to;
+  if (from !== undefined && s.has(a.id)) (a.activity_sections || []).forEach(x => { if (x.gear_id === from) x.gear_id = to; }); }); };
+import { openModal } from './edit.js?v=1795526807';
+import { gearFrom } from './pipeline.js?v=1795526807';
+import * as U from './units.js?v=1795526807';
 
 const el = (tag, props = {}, ...kids) => { const e = Object.assign(document.createElement(tag), props); kids.forEach(k => e.append(k)); return e; };
 const km = m => U.toD(m).toFixed(U.toD(m) >= 100 ? 0 : 1);   // km or miles
@@ -50,7 +54,7 @@ export function mountGear() {
       const go = el('button', { className: 'btn sm', textContent: `Assign ${n} ${sport === 'run' ? 'runs' : 'rides'}` });
       go.onclick = async () => { go.disabled = true; const ids = state.activities.filter(a => a.sport === sport && !a.gear_id).map(a => a.id);
         const r = await sb.from('activities').update({ gear_id: sel.value }).in('id', ids); if (r.error) { toast(r.error.message); go.disabled = false; return; }
-        await loadAll(); mountGear(); toast(`${ids.length} ${sport === 'run' ? 'runs' : 'rides'} assigned`); };
+        setGear(ids, sel.value); mountGear(); toast(`${ids.length} ${sport === 'run' ? 'runs' : 'rides'} assigned`); };
       row.append(sel, go);
     }
     card.append(row); v.append(card);
@@ -86,10 +90,10 @@ function editGear(g) {
     const left = el('div', { style: 'display:flex;gap:8px' });
     if (!isNew) {
       left.append(el('button', { className: 'btn', type: 'button', textContent: g.retired ? 'Bring back' : 'Retire', onclick: async () => {
-        await sb.from('gear').update({ retired: !g.retired, is_default_for: null }).eq('id', g.id); await loadAll(); close(); mountGear(); toast(g.retired ? 'Back in use' : 'Retired'); } }));
+        await sb.from('gear').update({ retired: !g.retired, is_default_for: null }).eq('id', g.id); await refreshGear(); close(); mountGear(); toast(g.retired ? 'Back in use' : 'Retired'); } }));
       const del = el('button', { className: 'btn', type: 'button', textContent: 'Delete' });
       del.onclick = async () => { if (!del.dataset.armed) { del.dataset.armed = 1; del.textContent = g.uses ? `Delete (unassigns ${g.uses})` : 'Click again to delete'; return; }
-        await sb.from('gear').delete().eq('id', g.id); await loadAll(); close(); mountGear(); toast('Deleted'); };
+        await sb.from('gear').delete().eq('id', g.id); setGear(state.activities.map(a => a.id), null, g.id); await refreshGear(); close(); mountGear(); toast('Deleted'); };
       left.append(del);
     }
     body.append(msg, el('div', { className: 'actions' }, left, el('div', { style: 'display:flex;gap:8px' }, el('button', { className: 'btn', type: 'button', textContent: 'Cancel', onclick: close }), save)));
@@ -108,7 +112,7 @@ function editGear(g) {
       // activities before the in-use date that have it (e.g. a Garmin export imported after the shoe was set as default)
       const from = f.from.value, dayOf = a => new Date(Date.parse(a.start_time) + (a.utc_offset_min || 0) * 60000).toISOString().slice(0, 10);
       const early = isNew || !from ? [] : state.activities.filter(a => dayOf(a) < from && (a.gear_id === g.id || (a.activity_sections || []).some(s => s.gear_id === g.id)));
-      if (!early.length) { await loadAll(); close(); mountGear(); toast(isNew ? 'Added' : 'Saved'); return; }
+      if (!early.length) { await refreshGear(); close(); mountGear(); toast(isNew ? 'Added' : 'Saved'); return; }
       const d = new Date(from + 'T00:00:00Z').toLocaleDateString(undefined, { day: 'numeric', month: 'short', year: 'numeric', timeZone: 'UTC' });
       msg.replaceChildren(el('b', { textContent: `${name} is on ${early.length.toLocaleString()} ${early.length === 1 ? 'activity' : 'activities'} from before ${d}.` }),
         ' Remove it from those? They’ll have no gear unless you set some.',
@@ -118,8 +122,8 @@ function editGear(g) {
             for (let i = 0; i < ids.length; i += 200) { const part = ids.slice(i, i + 200);
               await sb.from('activities').update({ gear_id: null }).eq('gear_id', g.id).in('id', part);
               await sb.from('activity_sections').update({ gear_id: null }).eq('gear_id', g.id).in('activity_id', part); }
-            await loadAll(); close(); mountGear(); toast(`Removed from ${ids.length.toLocaleString()} earlier ${ids.length === 1 ? 'activity' : 'activities'}`); } }),
-          el('button', { className: 'btn', type: 'button', textContent: 'Keep them', onclick: async () => { await loadAll(); close(); mountGear(); toast('Saved'); } })));
+            setGear(ids, null, g.id); await refreshGear(); close(); mountGear(); toast(`Removed from ${ids.length.toLocaleString()} earlier ${ids.length === 1 ? 'activity' : 'activities'}`); } }),
+          el('button', { className: 'btn', type: 'button', textContent: 'Keep them', onclick: async () => { await refreshGear(); close(); mountGear(); toast('Saved'); } })));
       save.hidden = true;
     };
     f.name.focus();

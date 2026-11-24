@@ -1,44 +1,44 @@
-import './busy.js?v=1795526551';   // first: makes slow buttons grey out while they work
-import { isGarmin } from './garmin.js?v=1795526551';
+import './busy.js?v=1795526807';   // first: makes slow buttons grey out while they work
+import { isGarmin } from './garmin.js?v=1795526807';
 import { createClient } from 'https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2.119.1/+esm';
-import { decodeFit } from './fit.js?v=1795526551';
+import { decodeFit } from './fit.js?v=1795526807';
 import JSZip from 'https://cdn.jsdelivr.net/npm/jszip@3.10.2/+esm';
 export { JSZip };
-import { processFit, shareStreams, rows, makeTrack, detectDriving, trimMessages, envLabel } from './process.js?v=1795526551';
-import { mountActivity } from './activity.js?v=1795526551';
-import { mountLog } from './log.js?v=1795526551';
-import { mountGear } from './gear.js?v=1795526551';
-import { mountClub } from './club.js?v=1795526551';
-import { mountClubPage, mountJoin } from './clubs.js?v=1795526551';
-import { mountRelay } from './relay.js?v=1795526551';
-import { lengthsIn, poolStats, poolBests } from './swim.js?v=1795526551';
-import { SWIM_DISTANCES, bestOverDistance } from './process.js?v=1795526551';
-import { setUnits, dist as uDist } from './units.js?v=1795526551';
-import { prettyOf, curRoute, rememberLink } from './urls.js?v=1795526551';
-import { openLink } from './profile.js?v=1795526551';
-import { mountBests, applyIgnores, backLabel } from './bests.js?v=1795526551';
-import { mountRaces } from './races.js?v=1795526551';
-import { weatherBackfill } from './weather.js?v=1795526551';
-import { initNotifications } from './notify.js?v=1795526551';
-import { initAccountData } from './account.js?v=1795526551';
-import { openFeedback } from './feedback.js?v=1795526551';
-import { mountAdmin, countVisit } from './admin.js?v=1795526551';
-import './racehist.js?v=1795526551';   // race history card on race pages
-import { mountActivities } from './actlist.js?v=1795526551';
-import { installHint } from './install.js?v=1795526551';
-import { openWelcome } from './settings.js?v=1795526551';
-import './swimview.js?v=1795526551';
-import './trophies.js?v=1795526551';
-import { mountFeed } from './feed.js?v=1795526551';
-import { enrichOut, saveProcessed, importDecoded, mergeMessages, pickGearFrom, gearRoles } from './pipeline.js?v=1795526551';
-import { perfData } from './perf.js?v=1795526551';
-import { loadData } from './load.js?v=1795526551';
-import { checkOnOpen, paintConnections } from './sync.js?v=1795526551';
-import { mountManual } from './manual.js?v=1795526551';
-import { mountCal } from './cal.js?v=1795526551';
-import { settingsAt } from './athlete.js?v=1795526551';
-import { initSettings, DEFAULTS, ageOn } from './settings.js?v=1795526551';
-import { offerCombine } from './edit.js?v=1795526551';
+import { processFit, shareStreams, rows, makeTrack, detectDriving, trimMessages, envLabel } from './process.js?v=1795526807';
+import { mountActivity } from './activity.js?v=1795526807';
+import { mountLog } from './log.js?v=1795526807';
+import { mountGear } from './gear.js?v=1795526807';
+import { mountClub } from './club.js?v=1795526807';
+import { mountClubPage, mountJoin } from './clubs.js?v=1795526807';
+import { mountRelay } from './relay.js?v=1795526807';
+import { lengthsIn, poolStats, poolBests } from './swim.js?v=1795526807';
+import { SWIM_DISTANCES, bestOverDistance } from './process.js?v=1795526807';
+import { setUnits, dist as uDist } from './units.js?v=1795526807';
+import { prettyOf, curRoute, rememberLink } from './urls.js?v=1795526807';
+import { openLink } from './profile.js?v=1795526807';
+import { mountBests, applyIgnores, backLabel } from './bests.js?v=1795526807';
+import { mountRaces } from './races.js?v=1795526807';
+import { weatherBackfill } from './weather.js?v=1795526807';
+import { initNotifications } from './notify.js?v=1795526807';
+import { initAccountData } from './account.js?v=1795526807';
+import { openFeedback } from './feedback.js?v=1795526807';
+import { mountAdmin, countVisit } from './admin.js?v=1795526807';
+import './racehist.js?v=1795526807';   // race history card on race pages
+import { mountActivities } from './actlist.js?v=1795526807';
+import { installHint } from './install.js?v=1795526807';
+import { openWelcome } from './settings.js?v=1795526807';
+import './swimview.js?v=1795526807';
+import './trophies.js?v=1795526807';
+import { mountFeed } from './feed.js?v=1795526807';
+import { enrichOut, saveProcessed, importDecoded, mergeMessages, pickGearFrom, gearRoles } from './pipeline.js?v=1795526807';
+import { perfData } from './perf.js?v=1795526807';
+import { loadData } from './load.js?v=1795526807';
+import { checkOnOpen, paintConnections } from './sync.js?v=1795526807';
+import { mountManual } from './manual.js?v=1795526807';
+import { mountCal } from './cal.js?v=1795526807';
+import { settingsAt } from './athlete.js?v=1795526807';
+import { initSettings, DEFAULTS, ageOn } from './settings.js?v=1795526807';
+import { offerCombine } from './edit.js?v=1795526807';
 
 // Public project settings. The publishable key is safe in the browser: row level security decides what each user can read or write.
 const SUPABASE_URL = 'https://ksubeokekwflqnmzsune.supabase.co';
@@ -148,7 +148,7 @@ async function backfill() {
 // worked out from the lengths already saved with each activity (no need to read the file again)
 async function swimBackfill() {
   const todo = state.activities.filter(a => (a.activity_sections || []).some(s => s.sport === 'swim' && s.summary?.env === 'pool' && !s.summary?.swimV));
-  let changed = 0;
+  let changed = 0; const changedIds = [];
   for (const a of todo) {
     try {
       const d = await fetchActivity(a.id), lens = d.streams?.lengths || [];
@@ -173,11 +173,11 @@ async function swimBackfill() {
         await sb.from('best_efforts').delete().eq('activity_id', a.id).eq('sport', 'swim');
         if (keep.size) await sb.from('best_efforts').insert([...keep.values()]);
         if (d.act.sport === 'swim' && allPool) await sb.from('activities').update({ moving_s: Math.round(swimTotal) }).eq('id', a.id);
-        changed++;
+        changed++; changedIds.push(a.id);
       }
     } catch (e) { /* try again next visit */ }
   }
-  if (changed) await loadAll();
+  if (changedIds.length) await refreshActs(changedIds);
 }
 
 // rides imported before 21 Nov 2026: add 90 km and 180 km bests (half and full Ironman bike legs) from the saved streams. Once.
@@ -185,7 +185,7 @@ async function bikeBackfill() {
   if (state.profile?.settings?.bikeBestsV >= 1) return;
   const IND = ['indoor', 'virtual'], have = new Set((state.bestsAll || []).filter(b => b.effort === '90 km').map(b => b.activity_id));
   const todo = state.activities.filter(a => !have.has(a.id) && (a.activity_sections || []).some(s => s.sport === 'bike' && +s.distance_m >= 90000 && !IND.includes(s.summary?.env)));
-  let added = 0;
+  let added = 0; const addedIds = [];
   for (const a of todo) {
     try {
       const d = await fetchActivity(a.id); if (!d.streams?.dist) continue;
@@ -196,12 +196,12 @@ async function bikeBackfill() {
         [['90 km', 90000], ['180 km', 180000]].forEach(([effort, m]) => { if (+s.distance_m < m) return; const b = bestOverDistance(sr, m);
           if (b && (!keep.has(effort) || b.t < keep.get(effort).value)) keep.set(effort, { owner: state.user.id, activity_id: a.id, sport: 'bike', effort, value: Math.round(b.t * 100) / 100, unit: 's', start_offset_s: Math.round(b.start * 10) / 10, measured: true, achieved_at: a.start_time }); });
       }
-      if (keep.size) { const r = await sb.from('best_efforts').insert([...keep.values()]); if (!r.error) added += keep.size; }
+      if (keep.size) { const r = await sb.from('best_efforts').insert([...keep.values()]); if (!r.error) { added += keep.size; addedIds.push(a.id); } }
     } catch (e) { /* skip this one */ }
   }
   const settings = { ...(state.profile.settings || {}), bikeBestsV: 1 };
   if (!(await sb.from('profiles').update({ settings }).eq('id', state.user.id)).error) state.profile.settings = settings;
-  if (added) await loadAll();
+  if (addedIds.length) await refreshActs(addedIds);
 }
 
 // ---------- data ----------
@@ -222,6 +222,29 @@ const QUICK = 300;
 let loadGen = 0;
 // quick: at sign-in, load the newest activities first so the app opens straight away, then everything else
 // in the background (state.partial is true until it arrives, and the log and gear pages redraw then).
+// Bring a few activities up to date in the loaded lists, instead of reloading the whole history (loadAll):
+// ids = activities added or changed (fetched again with their best efforts), removed = activities deleted.
+// Used after uploads, sync, edits, trims, linking and deleting. Falls back to loadAll if anything goes wrong.
+export async function refreshActs(ids = [], removed = []) {
+  const uid = state.user.id; ids = [...new Set(ids.filter(Boolean))];
+  const gone = new Set([...removed, ...ids]), parts = [];
+  for (let i = 0; i < ids.length; i += 100) parts.push(ids.slice(i, i + 100));
+  const [acts, bests] = await Promise.all([
+    Promise.all(parts.map(p => sb.from('activities').select(ACT_COLS).eq('owner', uid).in('id', p))),
+    Promise.all(parts.map(p => sb.from('best_efforts').select('*').eq('owner', uid).in('activity_id', p))),
+  ]);
+  if ([...acts, ...bests].some(r => r.error)) return loadAll();
+  const A = acts.flatMap(r => r.data || []), Bs = bests.flatMap(r => r.data || []);
+  A.forEach(x => x.num && rememberLink(x.id, state.profile?.handle + '/' + x.num));
+  const t = a => Date.parse(a.start_time);
+  state.activities = state.activities.filter(a => !gone.has(a.id)).concat(A).sort((a, b) => t(a) - t(b) || (a.id < b.id ? -1 : 1));
+  state.bestsAll = (state.bestsAll || []).filter(b => !gone.has(b.activity_id)).concat(Bs);
+  applyIgnores();
+}
+export async function refreshGear() {
+  const g = await sb.from('gear').select('*').eq('owner', state.user.id).order('created_at');
+  if (!g.error) state.gear = g.data || [];
+}
 export async function loadAll({ quick = false, bestsP = null } = {}) {
   const uid = state.user.id, gen = ++loadGen;
   const acts = () => sb.from('activities').select(ACT_COLS).eq('owner', uid);
@@ -356,7 +379,7 @@ export async function reprocess({ act, sections }, { trim, env, distFix } = {}) 
   const bySport = {}; sections.forEach(s => (bySport[s.sport] ||= []).push(s.gear_id));
   const seen = {}; const gearFor = sp => { seen[sp] = (seen[sp] || 0) + 1; return (bySport[sp] || [])[seen[sp] - 1] || null; };
   await writeProcessed(act.id, out, act.share, gearFor, true);
-  await loadAll();
+  await refreshActs([act.id]);
   return n;
 }
 export async function fetchActivity(id) {
@@ -535,7 +558,7 @@ async function handleFiles(files) {
     }
   } finally { busy = false; }
   summaryRow.set(`Done: ${added} added · ${skipped} already in Triven${notActivity ? ` · ${notActivity} non-activity files ignored` : ''}${failed ? ` · ${failed} failed` : ''}`, failed ? 'err' : 'ok');
-  if (added) { await loadAll(); toast(`${added} ${added === 1 ? 'activity' : 'activities'} added`); }
+  if (added) { await refreshActs(fresh.map(f => f.id)); toast(`${added} ${added === 1 ? 'activity' : 'activities'} added`); }
   // files that follow on from each other (within 10 minutes) may be one race recorded as separate activities
   const groups = consecutiveGroups(fresh, 10 * 60e3);
   if (groups.length) offerCombine(groups);

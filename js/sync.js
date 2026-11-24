@@ -1,9 +1,9 @@
 // Automatic sync. The server (Edge Function "sync") checks each connected member on their own schedule (every 30 minutes
 // for active members, less often for quiet ones), fetches new activities into an inbox and processes them. Opening the app
 // also asks for a check if the last one was over 10 minutes ago; anything the server couldn't finish is processed here.
-import { sb, state, toast, loadAll } from './main.js?v=1795526551';
-import { decodeFit } from './fit.js?v=1795526551';
-import { importDecoded } from './pipeline.js?v=1795526551';
+import { sb, state, toast, refreshActs } from './main.js?v=1795526807';
+import { decodeFit } from './fit.js?v=1795526807';
+import { importDecoded } from './pipeline.js?v=1795526807';
 
 const $ = id => document.getElementById(id);
 const el = (tag, props = {}, ...kids) => { const e = Object.assign(document.createElement(tag), props); kids.forEach(k => k != null && e.append(k)); return e; };
@@ -11,7 +11,7 @@ let busy = false;
 
 // process inbox files: the server gets the first 12 minutes (or two tries), unless `now` is set (Sync now)
 export async function processInbox(now = false) {
-  if (busy || !state.user) return 0; busy = true; let n = 0;
+  if (busy || !state.user) return 0; busy = true; let n = 0; const ids = [];
   try {
     const { data: items } = await sb.from('sync_inbox').select('*').eq('owner', state.user.id).eq('status', 'new').order('start_time');
     const due = (items || []).filter(it => now || it.attempts >= 2 || Date.now() - Date.parse(it.created_at) > 12 * 60e3);
@@ -24,10 +24,10 @@ export async function processInbox(now = false) {
         if (r.settings) state.profile.settings = r.settings;
         await sb.from('sync_inbox').update({ status: r.status === 'ok' ? 'done' : r.status === 'skip' ? 'skip' : 'failed', activity_id: r.id || null, error: r.status === 'notact' ? 'not an activity' : null }).eq('id', it.id);
         if (r.status === 'ok' || r.status === 'skip') sb.storage.from('activity-files').remove([it.file_path]);
-        if (r.status === 'ok') n++;
+        if (r.status === 'ok') { n++; ids.push(r.id); }
       } catch (e) { await sb.from('sync_inbox').update({ status: 'failed', error: String(e.message || e) }).eq('id', it.id); }
     }
-    if (n) { await loadAll(); toast(`${n} new ${n === 1 ? 'activity' : 'activities'} synced`); if (!state.route?.startsWith('#a/')) window.dispatchEvent(new HashChangeEvent('hashchange')); }
+    if (n) { await refreshActs(ids); toast(`${n} new ${n === 1 ? 'activity' : 'activities'} synced`); if (!state.route?.startsWith('#a/')) window.dispatchEvent(new HashChangeEvent('hashchange')); }
   } finally { busy = false; }
   return n;
 }

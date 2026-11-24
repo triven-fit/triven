@@ -1,12 +1,12 @@
 // Edit an activity: name, description, visibility, shared fields, gear (per section for multisport), delete. Plus comments.
-import { sb, state, toast, loadAll, renderActHeader, fetchActivity, VIS, reprocess, raceFlag, pickGear } from './main.js?v=1795526551';
-import { linkActivities, importDecoded } from './pipeline.js?v=1795526551';
-import { decodeFit } from './fit.js?v=1795526551';
-import { shareStreams, ENVS, INDOOR } from './process.js?v=1795526551';
-import { openTrim } from './trim.js?v=1795526551';
-import { openIg } from './ig.js?v=1795526551';
-import * as U from './units.js?v=1795526551';
-import { shareButton, linkUrl } from './profile.js?v=1795526551';
+import { sb, state, toast, refreshActs, renderActHeader, fetchActivity, VIS, reprocess, raceFlag, pickGear } from './main.js?v=1795526807';
+import { linkActivities, importDecoded } from './pipeline.js?v=1795526807';
+import { decodeFit } from './fit.js?v=1795526807';
+import { shareStreams, ENVS, INDOOR } from './process.js?v=1795526807';
+import { openTrim } from './trim.js?v=1795526807';
+import { openIg } from './ig.js?v=1795526807';
+import * as U from './units.js?v=1795526807';
+import { shareButton, linkUrl } from './profile.js?v=1795526807';
 const dayOf = a => new Date(Date.parse(a.start_time) + (a.utc_offset_min || 0) * 60000).toISOString().slice(0, 10);   // activity's local date
 
 const $ = id => document.getElementById(id);
@@ -266,7 +266,7 @@ export function openEditor(data, onSaved) {
         if (u.error) { msg.textContent = 'Saved, but the shared copy could not be updated: ' + u.error.message; }
       }
       Object.assign(act, upd);
-      await loadAll(); close(); toast('Activity saved'); onSaved && onSaved();
+      await refreshActs([act.id]); close(); toast('Activity saved'); onSaved && onSaved();
     };
     del.onclick = () => {
       if (del.dataset.armed) return doDelete();
@@ -282,7 +282,7 @@ export function openEditor(data, onSaved) {
       if (act.summary?.linked) await sb.storage.from('activity-files').remove(act.summary.linked.parts.map(p => p.file_path));
       const r = await sb.from('activities').delete().eq('id', act.id);
       if (r.error) { msg.textContent = r.error.message; del.disabled = false; return; }
-      await loadAll(); close(); toast('Activity deleted'); location.hash = '#log';
+      await refreshActs([], [act.id]); close(); toast('Activity deleted'); location.hash = '#log';
     }
   });
 }
@@ -396,7 +396,7 @@ async function linkIds(ids) {
     return { act: a, sections: (secs || []).filter(s => s.activity_id === a.id).sort((p, q) => p.idx - q.idx), messages: decodeFit(new Uint8Array(await dl.data.arrayBuffer())).messages };
   }));
   const r = await linkActivities(sb, { uid: state.user.id, parts, profile: state.profile, gear: state.gear });
-  await loadAll();
+  await refreshActs([r.id], ids);
   return r;
 }
 // after an upload: separate files that follow on from each other within 10 minutes
@@ -446,7 +446,7 @@ function unlinkButton(data) {
       await sb.from('activities').delete().eq('id', act.id);
       // the restored copies were re-uploaded under new names: drop the old part files
       await sb.storage.from('activity-files').remove(parts.map(p => p.file_path));
-      await loadAll(); toast(`Split into ${ids.length} activities`); location.hash = ids[0] ? '#a/' + ids[0] : '#log';
+      await refreshActs(ids, [act.id]); toast(`Split into ${ids.length} activities`); location.hash = ids[0] ? '#a/' + ids[0] : '#log';
     } catch (e) { toast('Could not unlink: ' + (e.message || e)); b.disabled = false; b.textContent = 'Unlink'; }
   };
   return b;
