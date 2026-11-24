@@ -10,7 +10,7 @@ Object.defineProperty(HTMLButtonElement.prototype, 'onclick', {
     const btn = this;
     desc.set.call(this, function (e) {
       const r = fn.call(this, e);
-      if (r && typeof r.then === 'function' && !btn.disabled) {
+      if (r && typeof r.then === 'function' && !btn.classList.contains('busy')) {
         btn.disabled = true; btn.classList.add('busy'); btn.setAttribute('aria-busy', 'true');
         const done = () => { btn.disabled = false; btn.classList.remove('busy'); btn.removeAttribute('aria-busy'); };
         r.then(done, done);

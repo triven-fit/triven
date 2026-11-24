@@ -1,12 +1,12 @@
 // Gear tab: shoes and bikes, distance, replacement guide, defaults, retire, bulk-assign.
-import { sb, state, toast, refreshGear, gearUsage, GEAR_ROLES, gearRoles } from './main.js?v=1795534599';
+import { sb, state, toast, refreshGear, gearUsage, GEAR_ROLES, gearRoles } from './main.js?v=1795542095';
 // gear changes are mirrored in the loaded activities rather than reloading the whole history
 const setGear = (ids, to, from) => { const s = new Set(ids); state.activities.forEach(a => {
   if (s.has(a.id) && (from === undefined || a.gear_id === from)) a.gear_id = to;
   if (from !== undefined && s.has(a.id)) (a.activity_sections || []).forEach(x => { if (x.gear_id === from) x.gear_id = to; }); }); };
-import { openModal } from './edit.js?v=1795534599';
-import { gearFrom } from './pipeline.js?v=1795534599';
-import * as U from './units.js?v=1795534599';
+import { openModal } from './edit.js?v=1795542095';
+import { gearFrom } from './pipeline.js?v=1795542095';
+import * as U from './units.js?v=1795542095';
 
 const el = (tag, props = {}, ...kids) => { const e = Object.assign(document.createElement(tag), props); kids.forEach(k => e.append(k)); return e; };
 const km = m => U.toD(m).toFixed(U.toD(m) >= 100 ? 0 : 1);   // km or miles
