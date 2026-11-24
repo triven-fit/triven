@@ -1,7 +1,7 @@
 // Activity view: charts, map, zones, FTP, running balance, laps. Mounted with one activity at a time.
-import { deviceLabel } from './garmin.js?v=1795526807';
-import { srcText } from './athlete.js?v=1795526807';
-import * as U from './units.js?v=1795526807';
+import { deviceLabel } from './garmin.js?v=1795533221';
+import { srcText } from './athlete.js?v=1795533221';
+import * as U from './units.js?v=1795533221';
 const css=n=>getComputedStyle(document.documentElement).getPropertyValue(n).trim();
 let bound=false;
 export function mountActivity(raw,cfgIn,saveCfg){
@@ -42,6 +42,15 @@ const HAS_GAP=R.some(r=>r.gap!=null);
 function gapOf(rs){let d=0,t=0;for(let i=1;i<rs.length;i++){const r=rs[i];if(r.gapF==null||rs[i-1].seg!==r.seg)continue;const dt=Math.min(10,r.t-rs[i-1].t);if(dt<=0)continue;d+=r.kmhS/3.6*r.gapF*dt;t+=dt}
   return d>0&&t>60?fmtPace(paceOf(d/t))+' '+U.pU():null}
 const recsIn=o=>R.filter(r=>r.t>=o.start&&r.t<o.start+o.elapsed);
+// best pace: the fastest 100 m of running, from the distance stream. GPS jumps are tamed by letting speed rise by at most
+// 2 m/s from one second to the next (real accelerations stay well inside that); pauses and leg changes break it.
+function bestPace(rs){const d=rs.filter(r=>r.dist!=null&&r.sport==='running');let best=0,i=0,v=0;const cd=new Array(d.length).fill(0);
+  for(let j=1;j<d.length;j++){const dt=d[j].t-d[j-1].t;
+    if(dt<=0||dt>5||d[j].seg!==d[j-1].seg){cd[j]=cd[j-1];i=j;v=0;continue}
+    const raw=Math.max(0,(d[j].dist-d[j-1].dist)/dt);v=Math.min(raw,(v||Math.min(raw,6))+2*dt);cd[j]=cd[j-1]+v*dt;
+    while(i<j-1&&cd[j]-cd[i+1]>=100)i++;
+    const dd=cd[j]-cd[i],tt=d[j].t-d[i].t;if(dd>=100&&tt>0&&dd/tt>best)best=dd/tt}
+  return best?fmtPace(paceOf(best))+' '+U.pU():null}
 // balance smoothed over ~10 s (time-based)
 R.forEach((r,i)=>{ if(r.bal==null){r.balS=null;return} let s=0,n=0; for(let j=i;j>=0&&R[j].t>=r.t-5;j--){if(R[j].seg===r.seg&&R[j].bal!=null){s+=R[j].bal;n++}} for(let j=i+1;j<R.length&&R[j].t<=r.t+5;j++){if(R[j].seg===r.seg&&R[j].bal!=null){s+=R[j].bal;n++}} r.balS=s/n;});
 
@@ -126,7 +135,7 @@ function swimItems(o,isAll){const t=o.swimTime||o.timer||o.elapsed;const it=[[fm
   return it.slice(0,6)}
 function statItems(){
   if(sel.kind==='all'&&!MULTI&&S[0].sport==='swimming') return swimItems({...S[0],avgHr:total.avgHr,maxHr:total.maxHr},true);
-  if(sel.kind==='all') return [[fmtDur(total.elapsed),'Total time'],[U.dist(total.dist),'Distance'],(S.some(s=>s.sport==='transition')?[fmtDur(d3.sum(S.filter(s=>s.sport==='transition'),s=>s.elapsed)),'Transitions']:(S.every(s=>s.sport==='running')?[fmtPace(paceOf(total.dist/total.elapsed))+' '+U.pU(),'Avg pace']:[U.speed(total.elapsed,total.dist),'Avg speed'])),...(S.every(s=>s.sport==='running')&&HAS_GAP&&gapOf(R)?[[gapOf(R),'Grade-adjusted pace']]:[]),
+  if(sel.kind==='all') return [[fmtDur(total.elapsed),'Total time'],[U.dist(total.dist),'Distance'],(S.some(s=>s.sport==='transition')?[fmtDur(d3.sum(S.filter(s=>s.sport==='transition'),s=>s.elapsed)),'Transitions']:(S.every(s=>s.sport==='running')?[fmtPace(paceOf(total.dist/total.elapsed))+' '+U.pU(),'Avg pace']:[U.speed(total.elapsed,total.dist),'Avg speed'])),...(S.every(s=>s.sport==='running')&&HAS_GAP&&gapOf(R)?[[gapOf(R),'Grade-adjusted pace']]:[]),...(S.every(s=>s.sport==='running')&&bestPace(R)?[[bestPace(R),'Best pace (fastest 100 m)']]:[]),
     ...(total.avgHr?[[total.avgHr+' bpm','Avg HR'+(total.maxHr?' · max '+total.maxHr:'')]]:[]),...(total.ascent||R.length?[[U.elev(total.ascent||0),'Elevation gain'+(R.length?' (watch)':'')]]:[]),...(total.cal?[[total.cal+' kcal','Energy']]:[])];
   if(sel.kind==='span'){const [a,b]=range();const rs=R.filter(r=>r.t>=a&&r.t<=b);
     return [[fmtDur(b-a),'Duration'],[(v=>`${v.toFixed(1)} / ${(100-v).toFixed(1)}`)(d3.mean(rs.filter(r=>r.bal!=null),r=>r.bal)),'GCT balance L / R %'],[fmtPace(60/U.kmhTo((((d=>d.length>1?(d[d.length-1].dist-d[0].dist)/((d[d.length-1].t-d[0].t)||1):d3.mean(rs,r=>r.kmh)/3.6)(rs.filter(r=>r.dist!=null)))*3.6)))+' '+U.pU(),'Pace'],[Math.round(d3.mean(rs,r=>r.hr))+' bpm','Avg HR'],[Math.round(d3.mean(rs.filter(r=>r.gct),r=>r.gct))+' ms','Ground contact'],[Math.round(d3.mean(rs.filter(r=>r.spm),r=>r.spm))+' spm','Cadence']];}
@@ -136,6 +145,7 @@ function statItems(){
   const it=[[fmtDur(o.elapsed),'Time'],[sp==='transition'?Math.round(o.dist)+' m':km(o.dist)+' '+U.dU(),'Distance']];
   it.push(sp==='running'?[fmtPace(paceOf(o.avgSpeed))+' '+U.pU(),'Avg pace']:[U.speedMs(o.avgSpeed),'Avg speed']);
   if(sp==='running'&&HAS_GAP){const g=gapOf(recsIn(o));if(g)it.push([g,'Grade-adjusted pace'])}
+  if(sp==='running'){const b=bestPace(recsIn(o));if(b)it.push([b,'Best pace (fastest 100 m)'])}
   it.push([o.avgHr+' bpm','Avg HR'+(o.maxHr?' · max '+o.maxHr:'')]);
   if(sp==='running'&&o.avgPower) it.push([o.avgPower+' W','Avg run power']);
   if(sp==='running'&&o.avgCad) it.push([o.avgCad*2+' spm','Cadence']);
@@ -400,10 +410,11 @@ function setCursor(r){
 
 function renderLaps(){
   const t=document.getElementById('laps');t.replaceChildren();const hr=t.insertRow();
-  ['#','Section','Time','Distance','Pace / speed',...(HAS_GAP?['GAP']:[]),'Avg HR','Power','Gain'].forEach(h=>{const th=document.createElement('th');th.textContent=h;hr.append(th)});
+  const BEST=L.some(l=>l.sport==='running');
+  ['#','Section','Time','Distance','Pace / speed',...(BEST?['Best']:[]),...(HAS_GAP?['GAP']:[]),'Avg HR','Power','Gain'].forEach(h=>{const th=document.createElement('th');th.textContent=h;hr.append(th)});
   L.forEach((l,i)=>{const tr=t.insertRow();tr.className='lap'+(sel.kind==='lap'&&sel.i===i?' sel':'');
     [String(i+1),NAMES[segOf(l.start+.5)],fmtDur(l.elapsed),l.dist<100?Math.round(l.dist)+' m':km(l.dist)+' '+U.dU(),
-     l.sport==='running'?fmtPace(paceOf(l.avgSpeed))+' '+U.pU():l.sport==='cycling'?U.speedMs(l.avgSpeed):'–',...(HAS_GAP?[l.sport==='running'?(gapOf(recsIn(l))||'–'):'–']:[]),l.avgHr??'–',l.avgPower?l.avgPower+' W':'–',l.ascent!=null?U.elev(l.ascent):'–']
+     l.sport==='running'?fmtPace(paceOf(l.avgSpeed))+' '+U.pU():l.sport==='cycling'?U.speedMs(l.avgSpeed):'–',...(BEST?[l.sport==='running'?(bestPace(recsIn(l))||'–'):'–']:[]),...(HAS_GAP?[l.sport==='running'?(gapOf(recsIn(l))||'–'):'–']:[]),l.avgHr??'–',l.avgPower?l.avgPower+' W':'–',l.ascent!=null?U.elev(l.ascent):'–']
     .forEach((c,j)=>{const td=tr.insertCell();if(j===1){const d=document.createElement('span');d.className='dot';d.style.background=colorOf(l.sport);td.append(d)}td.append(document.createTextNode(c))});
     tr.onclick=()=>{const off=sel.kind==='lap'&&sel.i===i;select(off?{kind:'all'}:{kind:'lap',i});if(!off)document.getElementById('chartscard')?.scrollIntoView({behavior:'smooth',block:'start'})};});
 }

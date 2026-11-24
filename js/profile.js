@@ -1,11 +1,11 @@
 // Profile pages (triven.fit/<username>) and short links (triven.fit/<username>/<n>). Members only.
-import { garminNote } from './garmin.js?v=1795526807';
-import { sb, state, toast, avatarEl } from './main.js?v=1795526807';
-import { feedList } from './feed.js?v=1795526807';
-import { followBtn } from './club.js?v=1795526807';
-import * as U from './units.js?v=1795526807';
-import { rememberLink } from './urls.js?v=1795526807';
-import { RUN_DISTANCES, SWIM_DISTANCES } from './process.js?v=1795526807';
+import { garminNote } from './garmin.js?v=1795533221';
+import { sb, state, toast, avatarEl } from './main.js?v=1795533221';
+import { feedList } from './feed.js?v=1795533221';
+import { followBtn } from './club.js?v=1795533221';
+import * as U from './units.js?v=1795533221';
+import { rememberLink } from './urls.js?v=1795533221';
+import { RUN_DISTANCES, SWIM_DISTANCES } from './process.js?v=1795533221';
 
 const el = (tag, props = {}, ...kids) => { const e = Object.assign(document.createElement(tag), props); kids.forEach(k => k != null && e.append(k)); return e; };
 const fmtDur = s => { s = Math.round(s); const h = Math.floor(s / 3600), m = Math.floor(s % 3600 / 60), x = s % 60; return h ? `${h}:${String(m).padStart(2, '0')}:${String(x).padStart(2, '0')}` : `${m}:${String(x).padStart(2, '0')}`; };
