@@ -4,11 +4,11 @@
 // Forecast: the fitness/fatigue model (load.js) run forward from today. "As you are" repeats your average daily load of the
 // last 4 weeks. The taper suggestion is the smallest cut to that load over the final days (10 for an A race, 5 for a B)
 // that brings race-day form into the Fresh band (+5 or more). C races aren't tapered for.
-import { sb, state, toast, raceFlag } from './main.js?v=1795533703';
-import { openModal } from './edit.js?v=1795533703';
-import { pmc, formBand } from './load.js?v=1795533703';
-import { DEFAULTS } from './settings.js?v=1795533703';
-import * as U from './units.js?v=1795533703';
+import { sb, state, toast, raceFlag } from './main.js?v=1795534599';
+import { openModal } from './edit.js?v=1795534599';
+import { pmc, formBand } from './load.js?v=1795534599';
+import { DEFAULTS } from './settings.js?v=1795534599';
+import * as U from './units.js?v=1795534599';
 
 const el = (tag, props = {}, ...kids) => { const e = Object.assign(document.createElement(tag), props); kids.forEach(k => k != null && e.append(k)); return e; };
 const DAY = 864e5, MON = ['Jan', 'Feb', 'Mar', 'Apr', 'May', 'Jun', 'Jul', 'Aug', 'Sep', 'Oct', 'Nov', 'Dec'];

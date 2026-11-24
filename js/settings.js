@@ -1,10 +1,10 @@
 // Athlete settings sheet: heart-rate zones, running-balance flags, cycling model.
 const $=id=>document.getElementById(id), ov=$('settings');
 const ZNAMES=['Recovery','Aerobic','Tempo','Sub-threshold','Threshold','VO₂ max +'];
-import { DEFAULTS } from './defaults.js?v=1795533703';
-import * as U from './units.js?v=1795533703';
-import { sb } from './main.js?v=1795533703';
-import { PHYS, PHYS_LABEL, PHYS_UNIT, applyChange, removeChange, todayKey } from './athlete.js?v=1795533703';
+import { DEFAULTS } from './defaults.js?v=1795534599';
+import * as U from './units.js?v=1795534599';
+import { sb } from './main.js?v=1795534599';
+import { PHYS, PHYS_LABEL, PHYS_UNIT, applyChange, removeChange, todayKey } from './athlete.js?v=1795534599';
 export { DEFAULTS };
 const FIELDS=['lthrRun','lthrBike','maxHr','restHr','balLo','balHi','balMin','ftp','mass','bikeMass','cda','crr'];
 let getCfg=()=>DEFAULTS, onApply=()=>{}, priv=null, draft=null;
@@ -60,7 +60,7 @@ export function initSettings(get,apply,privacy){watchHandle();
   $('p_search').onchange=()=>{$('p_approveRow').hidden=!$('p_search').checked;audOpt()};
   ['s_lthrRun','s_lthrBike'].forEach(id=>$(id).addEventListener('input',preview));
   $('openSettings').onclick=()=>openSheet(getCfg());
-  $('closeSettings').onclick=()=>ov.classList.remove('open');
+  $('closeSettings').onclick=$('setX').onclick=()=>ov.classList.remove('open');
   $('openSettings').addEventListener('click',()=>{$('setWelcome').hidden=true});
   ov.addEventListener('click',e=>{if(e.target===ov)ov.classList.remove('open')});
   document.addEventListener('keydown',e=>{if(e.key==='Escape')ov.classList.remove('open')});
