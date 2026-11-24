@@ -1,8 +1,8 @@
 // Heat on activities: the weather at the activity's time and place (Open-Meteo, free, no key), saved in summary.weather.
 // Only a rounded location (0.1°, about 10 km) and the date are sent. Runs get a heat cost on pace from temperature + dew
 // point (the sum in °F: up to 100 no effect, 150 ≈ 4.5% slower, 180 ≈ 10%, above that hard running isn't advised).
-import { sb, state } from './main.js?v=1795542095';
-import * as U from './units.js?v=1795542095';
+import { sb, state } from './main.js?v=1795547292';
+import * as U from './units.js?v=1795547292';
 
 const el = (tag, props = {}, ...kids) => { const e = Object.assign(document.createElement(tag), props); kids.forEach(k => k != null && e.append(k)); return e; };
 const DAY = 864e5;

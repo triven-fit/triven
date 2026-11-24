@@ -11,7 +11,7 @@
 // Uploads store a compact summary (seconds at each heart rate, normalised power and duration) and the load is worked
 // out from it with the thresholds in effect on the activity's day (see athlete.js), so changing them today leaves history alone.
 
-import { settingsAt } from './athlete.js?v=1795542095';
+import { settingsAt } from './athlete.js?v=1795547292';
 
 const SP = { run: 'run', running: 'run', bike: 'bike', cycling: 'bike', swim: 'swim', swimming: 'swim' };
 

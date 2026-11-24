@@ -1,7 +1,7 @@
 // Race history on a race's page: your other races at the same event, side by side with every leg and transition.
 // Same event = both flagged as races, same sport (and multisport type), starts within 3 km, distance within 10%.
-import { state } from './main.js?v=1795542095';
-import * as U from './units.js?v=1795542095';
+import { state } from './main.js?v=1795547292';
+import * as U from './units.js?v=1795547292';
 
 const el = (tag, props = {}, ...kids) => { const e = Object.assign(document.createElement(tag), props); kids.forEach(k => k != null && e.append(k)); return e; };
 const fmtDur = s => { s = Math.round(s); const h = Math.floor(s / 3600), m = Math.floor(s % 3600 / 60), x = s % 60; return h ? `${h}:${String(m).padStart(2, '0')}:${String(x).padStart(2, '0')}` : `${m}:${String(x).padStart(2, '0')}`; };
