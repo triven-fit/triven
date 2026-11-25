@@ -1,15 +1,15 @@
 // Feeds: Me (your activities), Club (you and club mates), Everyone (public activities from all Triven athletes).
-import { sb, state, toast, fetchActivity, VIS, raceFlag, avatarEl } from './main.js?v=1795547292';
-import { mountWeek } from './week.js?v=1795547292';
-import { envLabel } from './process.js?v=1795547292';
-import { rememberLink } from './urls.js?v=1795547292';
-import { tempTxt } from './weather.js?v=1795547292';
-import { mainDevice, garminNote } from './garmin.js?v=1795547292';
-import * as U from './units.js?v=1795547292';
-import { drawRouteMap } from './mapcanvas.js?v=1795547292';
-import { openEditor, mediaUrls, lightbox } from './edit.js?v=1795547292';
-import { openTrim } from './trim.js?v=1795547292';
-import { relayCard, relayInvites } from './relay.js?v=1795547292';
+import { sb, state, toast, fetchActivity, VIS, raceFlag, avatarEl } from './main.js?v=1795590613';
+import { mountWeek } from './week.js?v=1795590613';
+import { envLabel } from './process.js?v=1795590613';
+import { rememberLink } from './urls.js?v=1795590613';
+import { tempTxt } from './weather.js?v=1795590613';
+import { mainDevice, garminNote } from './garmin.js?v=1795590613';
+import * as U from './units.js?v=1795590613';
+import { drawRouteMap } from './mapcanvas.js?v=1795590613';
+import { openEditor, mediaUrls, lightbox } from './edit.js?v=1795590613';
+import { openTrim } from './trim.js?v=1795590613';
+import { relayCard, relayInvites } from './relay.js?v=1795590613';
 
 const el = (tag, props = {}, ...kids) => { const e = Object.assign(document.createElement(tag), props); kids.forEach(k => k != null && e.append(k)); return e; };
 const MON = ['Jan', 'Feb', 'Mar', 'Apr', 'May', 'Jun', 'Jul', 'Aug', 'Sep', 'Oct', 'Nov', 'Dec'];

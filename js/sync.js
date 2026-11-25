@@ -1,9 +1,9 @@
 // Automatic sync. The server (Edge Function "sync") checks each connected member on their own schedule (every 30 minutes
 // for active members, less often for quiet ones), fetches new activities into an inbox and processes them. Opening the app
 // also asks for a check if the last one was over 10 minutes ago; anything the server couldn't finish is processed here.
-import { sb, state, toast, refreshActs } from './main.js?v=1795547292';
-import { decodeFit } from './fit.js?v=1795547292';
-import { importDecoded } from './pipeline.js?v=1795547292';
+import { sb, state, toast, refreshActs } from './main.js?v=1795590613';
+import { decodeFit } from './fit.js?v=1795590613';
+import { importDecoded } from './pipeline.js?v=1795590613';
 
 const $ = id => document.getElementById(id);
 const el = (tag, props = {}, ...kids) => { const e = Object.assign(document.createElement(tag), props); kids.forEach(k => k != null && e.append(k)); return e; };
@@ -30,6 +30,14 @@ export async function processInbox(now = false) {
     if (n) { await refreshActs(ids); toast(`${n} new ${n === 1 ? 'activity' : 'activities'} synced`); if (!state.route?.startsWith('#a/')) window.dispatchEvent(new HashChangeEvent('hashchange')); }
   } finally { busy = false; }
   return n;
+}
+
+// pull to refresh: a forced check when connected, then whatever is waiting; returns how many arrived
+export async function syncNow() {
+  if (!state.user) return 0;
+  const { data: c } = await sb.from('connections').select('id').eq('owner', state.user.id).eq('provider', 'intervals').maybeSingle();
+  if (c) await sb.functions.invoke('sync', { body: { mode: 'mine', force: true } }).catch(() => {});
+  return await processInbox(!!c).catch(() => 0);
 }
 
 // on opening the app: ask for a check if it's been a while, then import whatever is waiting
