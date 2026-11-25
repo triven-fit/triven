@@ -1,9 +1,9 @@
 // Automatic sync. The server (Edge Function "sync") checks each connected member on their own schedule (every 30 minutes
 // for active members, less often for quiet ones), fetches new activities into an inbox and processes them. Opening the app
 // also asks for a check every time it opens or comes back to the front (at most once a minute) and imports the result here.
-import { sb, state, toast, refreshActs } from './main.js?v=1795591409';
-import { decodeFit } from './fit.js?v=1795591409';
-import { importDecoded } from './pipeline.js?v=1795591409';
+import { sb, state, toast, refreshActs } from './main.js?v=1795593286';
+import { decodeFit } from './fit.js?v=1795593286';
+import { importDecoded } from './pipeline.js?v=1795593286';
 
 const $ = id => document.getElementById(id);
 const el = (tag, props = {}, ...kids) => { const e = Object.assign(document.createElement(tag), props); kids.forEach(k => k != null && e.append(k)); return e; };

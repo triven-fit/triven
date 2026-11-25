@@ -1,6 +1,6 @@
 // Owner dashboard (#admin): sign-ups, active users, visits, uploads, what's being recorded, and feedback triage.
 // Everything comes from admin_stats(days) (019), which refuses anyone who isn't in the admins table.
-import { sb, toast } from './main.js?v=1795591409';
+import { sb, toast } from './main.js?v=1795593286';
 
 const el = (tag, props = {}, ...kids) => { const e = Object.assign(document.createElement(tag), props); kids.forEach(k => k != null && e.append(k)); return e; };
 const NS = 'http://www.w3.org/2000/svg';
