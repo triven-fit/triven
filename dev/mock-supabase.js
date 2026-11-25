@@ -12,7 +12,7 @@ function q(table){
     select(c='*',o){cols=c;if(o&&o.count)cnt=o;if(mode==='select')mode='select';return api},
     eq(k,v){filters.push(r=>r[k]===v);return api},
     contains(k,v){const m=(a,b)=>Array.isArray(b)?b.every(x=>(a||[]).includes(x)):(b&&typeof b==='object')?Object.entries(b).every(([kk,vv])=>a&&m(a[kk],vv)):a===b;filters.push(r=>m(r[k],v));return api},
-    or(e){const cs=e.split(',').map(c=>{const [k,,v]=c.split('.');return r=>String(r[k])===v});filters.push(r=>cs.some(f=>f(r)));return api},
+    or(e){const cs=e.split(',').map(c=>{const i=c.indexOf('.'),j=c.indexOf('.',i+1);const k=c.slice(0,i),op=c.slice(i+1,j),v=c.slice(j+1);return op==='is'&&v==='null'?r=>r[k]==null:op==='lt'?r=>r[k]!=null&&r[k]<v:op==='gt'?r=>r[k]!=null&&r[k]>v:r=>String(r[k])===v});filters.push(r=>cs.some(f=>f(r)));return api},
     in(k,v){filters.push(r=>v.includes(r[k]));return api},
     order(k,o={}){if(!ord)ord=[k,o.ascending!==false];return api},
     range(a,b){rng=[a,b];return api},

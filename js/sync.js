@@ -1,9 +1,9 @@
 // Automatic sync. The server (Edge Function "sync") checks each connected member on their own schedule (every 30 minutes
 // for active members, less often for quiet ones), fetches new activities into an inbox and processes them. Opening the app
-// also asks for a check if the last one was over 10 minutes ago; anything the server couldn't finish is processed here.
-import { sb, state, toast, refreshActs } from './main.js?v=1795590613';
-import { decodeFit } from './fit.js?v=1795590613';
-import { importDecoded } from './pipeline.js?v=1795590613';
+// also asks for a check every time it opens or comes back to the front (at most once a minute) and imports the result here.
+import { sb, state, toast, refreshActs } from './main.js?v=1795591072';
+import { decodeFit } from './fit.js?v=1795591072';
+import { importDecoded } from './pipeline.js?v=1795591072';
 
 const $ = id => document.getElementById(id);
 const el = (tag, props = {}, ...kids) => { const e = Object.assign(document.createElement(tag), props); kids.forEach(k => k != null && e.append(k)); return e; };
@@ -16,6 +16,11 @@ export async function processInbox(now = false) {
     const { data: items } = await sb.from('sync_inbox').select('*').eq('owner', state.user.id).eq('status', 'new').order('start_time');
     const due = (items || []).filter(it => now || it.attempts >= 2 || Date.now() - Date.parse(it.created_at) > 12 * 60e3);
     for (const it of due) {
+      // claim it like the server does (sync_claim_inbox), so the two never import the same file at once
+      const nowIso = new Date().toISOString();
+      const { data: got } = await sb.from('sync_inbox').update({ lease_until: new Date(Date.now() + 240e3).toISOString() })
+        .eq('id', it.id).eq('status', 'new').or(`lease_until.is.null,lease_until.lt.${nowIso}`).select('id');
+      if (!got?.length) continue;
       try {
         const dl = await sb.storage.from('activity-files').download(it.file_path); if (dl.error) throw dl.error;
         const raw = new Uint8Array(await dl.data.arrayBuffer());
@@ -40,15 +45,19 @@ export async function syncNow() {
   return await processInbox(!!c).catch(() => 0);
 }
 
-// on opening the app: ask for a check if it's been a while, then import whatever is waiting
+// on opening the app, and whenever it comes back to the front: check intervals.icu, then import what's waiting.
+// The server ignores app checks less than a minute apart; we don't ask more than once a minute either.
+let lastAsk = 0;
 export async function checkOnOpen() {
-  if (!state.user) return;
+  if (!state.user || Date.now() - lastAsk < 60e3) return; lastAsk = Date.now(); let asked = false;
   try {
-    const { data: c } = await sb.from('connections').select('last_sync,status').eq('owner', state.user.id).eq('provider', 'intervals').maybeSingle();
-    if (c && (!c.last_sync || Date.now() - Date.parse(c.last_sync) > 10 * 60e3)) await sb.functions.invoke('sync', { body: { mode: 'mine' } });
+    const { data: c } = await sb.from('connections').select('id').eq('owner', state.user.id).eq('provider', 'intervals').maybeSingle();
+    // we asked for this check, so import what it finds now rather than leaving it to the server's next minute
+    if (c) { await sb.functions.invoke('sync', { body: { mode: 'mine' } }); asked = true; }
   } catch {}
-  await processInbox().catch(() => {});
+  await processInbox(asked).catch(() => {});
 }
+document.addEventListener('visibilitychange', () => { if (!document.hidden) checkOnOpen(); });
 
 // Settings → Connected services
 export async function paintConnections() {
