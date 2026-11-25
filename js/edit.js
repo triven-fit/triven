@@ -1,12 +1,12 @@
 // Edit an activity: name, description, visibility, shared fields, gear (per section for multisport), delete. Plus comments.
-import { sb, state, toast, refreshActs, renderActHeader, fetchActivity, VIS, reprocess, raceFlag, pickGear } from './main.js?v=1795591072';
-import { linkActivities, importDecoded } from './pipeline.js?v=1795591072';
-import { decodeFit } from './fit.js?v=1795591072';
-import { shareStreams, ENVS, INDOOR } from './process.js?v=1795591072';
-import { openTrim } from './trim.js?v=1795591072';
-import { openIg } from './ig.js?v=1795591072';
-import * as U from './units.js?v=1795591072';
-import { shareButton, linkUrl } from './profile.js?v=1795591072';
+import { sb, state, toast, refreshActs, renderActHeader, fetchActivity, VIS, reprocess, raceFlag, pickGear, refreshGear } from './main.js?v=1795591409';
+import { linkActivities, importDecoded } from './pipeline.js?v=1795591409';
+import { decodeFit } from './fit.js?v=1795591409';
+import { shareStreams, ENVS, INDOOR } from './process.js?v=1795591409';
+import { openTrim } from './trim.js?v=1795591409';
+import { openIg } from './ig.js?v=1795591409';
+import * as U from './units.js?v=1795591409';
+import { shareButton, linkUrl } from './profile.js?v=1795591409';
 const dayOf = a => new Date(Date.parse(a.start_time) + (a.utc_offset_min || 0) * 60000).toISOString().slice(0, 10);   // activity's local date
 
 const $ = id => document.getElementById(id);
@@ -136,16 +136,39 @@ export function lightbox(m) {
 }
 
 function gearSelect(kind, value) {
-  const s = el('select');
-  s.append(el('option', { value: '', textContent: kind === 'bike' ? 'No bike' : 'No shoes' }));
-  state.gear.filter(g => g.kind === kind && (!g.retired || g.id === value)).forEach(g => s.append(el('option', { value: g.id, textContent: g.name + (g.retired ? ' (retired)' : ''), selected: g.id === value })));
+  const s = el('select'), what = kind === 'bike' ? 'bike' : 'shoes';
+  const fill = v => { s.replaceChildren(el('option', { value: '', textContent: kind === 'bike' ? 'No bike' : 'No shoes' }));
+    state.gear.filter(g => g.kind === kind && (!g.retired || g.id === v)).forEach(g => s.append(el('option', { value: g.id, textContent: g.name + (g.retired ? ' (retired)' : ''), selected: g.id === v })));
+    s.append(el('option', { value: '__new', textContent: `+ Add new ${what}…` })); s.dataset.prev = s.value; };
+  fill(value); s.dataset.kind = kind; s.refill = fill;
+  // "+ Add new…": a name box under the dropdown; the new item is saved straight away and chosen here
+  s.addEventListener('change', () => {
+    if (s.value !== '__new') { s.dataset.prev = s.value; return; }
+    s.value = s.dataset.prev || ''; if (s.nextElementSibling?.classList.contains('gearnew')) { s.nextElementSibling.querySelector('input').focus(); return; }
+    const name = el('input', { placeholder: kind === 'bike' ? 'Bike name, e.g. Canyon Aeroad' : 'Shoe name, e.g. Pegasus 41', maxLength: 80 });
+    const add = el('button', { className: 'btn sm primary', type: 'button', textContent: 'Add' });
+    const no = el('button', { className: 'btn sm', type: 'button', textContent: 'Cancel' });
+    const note = el('div', { className: 'note' });
+    const box = el('div', { className: 'gearnew' }, el('div', { className: 'gearnewrow' }, name, add, no), note);
+    no.onclick = () => box.remove();
+    name.onkeydown = e => { if (e.key === 'Enter') { e.preventDefault(); add.click(); } };
+    add.onclick = async () => {
+      const n = name.value.trim(); if (!n) { note.textContent = 'Give it a name.'; name.focus(); return; }
+      const r = await sb.from('gear').insert({ kind, name: n }).select().single();
+      if (r.error) { note.textContent = r.error.message; return; }
+      await refreshGear();
+      // offer it in every dropdown of this kind in the editor, chosen in this one
+      document.querySelectorAll('#modalBody select').forEach(o => { if (o.dataset.kind === kind) o.refill(o === s ? r.data.id : o.value); });
+      box.remove(); toast(`${n} added. Set its starting distance and defaults on the Gear tab.`, 5000);
+    };
+    s.after(box); name.focus();
+  });
   return s;
 }
 
 export function openEditor(data, onSaved) {
   const { act, sections } = data;
   openModal((body, close) => {
-    body.append(el('h3', { textContent: 'Edit activity' }));
     const name = el('input', { value: act.name, maxLength: 120 });
     const desc = el('textarea', { rows: 4, value: act.description || '' });
     const vis = el('select');
@@ -201,7 +224,6 @@ export function openEditor(data, onSaved) {
       const sel = gearSelect(act.sport === 'run' ? 'shoe' : 'bike', act.gear_id); gearInputs.push({ sec: null, sel });
       gearSec.append(el('label', { className: 'f', style: 'margin-top:8px' }, act.sport === 'run' ? 'Shoes' : 'Bike', sel));
     } else gearSec.append(el('div', { className: 'note', textContent: 'Gear can be assigned to runs and rides.' }));
-    if (!state.gear.length) gearSec.append(el('div', { className: 'note', textContent: 'Add shoes and bikes on the Gear tab first.' }));
     // sharing
     const shareSec = el('section', {}, el('h2', { textContent: 'Who can see it' }), el('label', { className: 'f', style: 'margin-top:8px' }, 'Visible to', vis));
     const boxes = {};
@@ -213,17 +235,19 @@ export function openEditor(data, onSaved) {
     const del = el('button', { className: 'btn', textContent: 'Delete activity', type: 'button' });
     const save = el('button', { className: 'btn primary', textContent: 'Save', type: 'button' });
     const cancel = el('button', { className: 'btn', textContent: 'Cancel', type: 'button', onclick: close });
-    body.append(sec1, typeSec, mediaSec, gearSec, shareSec, msg, el('div', { className: 'actions' }, del, el('div', { style: 'display:flex;gap:8px' }, cancel, save)));
+    // Save and Cancel pinned to the top of the sheet; Delete stays at the bottom, away from Save
+    body.append(el('div', { className: 'edbar' }, el('h3', { textContent: 'Edit activity' }), el('div', { className: 'edbtns' }, cancel, save)), msg,
+      sec1, typeSec, mediaSec, gearSec, shareSec, el('div', { className: 'delrow' }, del));
 
     save.onclick = async () => {
       save.disabled = true; msg.textContent = 'Saving…';
       const share = Object.fromEntries(SHARE.map(([k]) => [k, boxes[k].checked]));
       const upd = { name: name.value.trim() || act.name, description: desc.value.trim() || null, notes: notes.value.trim() || null, visibility: vis.value, share };
-      const single = gearInputs.find(g => !g.sec); if (single) upd.gear_id = single.sel.value || null;
+      const single = gearInputs.find(g => !g.sec); if (single) upd.gear_id = (single.sel.value !== '__new' && single.sel.value) || null;
       const r = await sb.from('activities').update(upd).eq('id', act.id);
       if (r.error) { msg.textContent = r.error.message; save.disabled = false; return; }
       for (const g of gearInputs.filter(g => g.sec)) {
-        const v = g.sel.value || null; if (v === g.sec.gear_id) continue;
+        const v = (g.sel.value !== '__new' && g.sel.value) || null; if (v === g.sec.gear_id) continue;
         const q = await sb.from('activity_sections').update({ gear_id: v }).eq('activity_id', act.id).eq('idx', g.sec.idx); if (q.error) { msg.textContent = q.error.message; save.disabled = false; return; }
         g.sec.gear_id = v;
       }
