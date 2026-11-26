@@ -1,9 +1,9 @@
 // Pull to refresh on touch screens: drag down from the top of a page to check for new activities and redraw the page.
 // No indicator while pulling; "Syncing…" shows once released past the threshold.
 // The installed app on iPhone has no browser refresh gesture, so this stands in for it.
-import { state, toast } from './main.js?v=1795593286';
-import { syncNow } from './sync.js?v=1795593286';
-import { refreshNotifications } from './notify.js?v=1795593286';
+import { state, toast } from './main.js?v=1795708914';
+import { syncNow } from './sync.js?v=1795708914';
+import { refreshNotifications } from './notify.js?v=1795708914';
 
 const TRIGGER = 70, MAX = 110;
 let startY = null, startX = 0, dist = 0, active = false, running = false;

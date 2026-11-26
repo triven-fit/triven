@@ -1,7 +1,7 @@
 // Activity view: charts, map, zones, FTP, running balance, laps. Mounted with one activity at a time.
-import { deviceLabel } from './garmin.js?v=1795593286';
-import { srcText } from './athlete.js?v=1795593286';
-import * as U from './units.js?v=1795593286';
+import { deviceLabel } from './garmin.js?v=1795708914';
+import { srcText } from './athlete.js?v=1795708914';
+import * as U from './units.js?v=1795708914';
 const css=n=>getComputedStyle(document.documentElement).getPropertyValue(n).trim();
 let bound=false;
 export function mountActivity(raw,cfgIn,saveCfg){
@@ -414,13 +414,13 @@ function renderLaps(){
   const RUNS=L.every(l=>l.sport==='running');
   // run form per lap from the records: ground contact time and stride length (only when the watch recorded them)
   const avgOf=(rs,k)=>{let s=0,n=0;for(const r of rs)if(r[k]!=null&&r.sport==='running'){s+=r[k];n++}return n?s/n:null};
-  const FORM=L.map(l=>l.sport==='running'?(rs=>({gct:avgOf(rs,'gct'),stride:avgOf(rs,'strideU')}))(recsIn(l)):{});
-  const HAS_GCT=FORM.some(f=>f.gct!=null),HAS_STR=FORM.some(f=>f.stride!=null);
+  const FORM=L.map(l=>l.sport==='running'?(rs=>({cad:avgOf(rs,'spm'),gct:avgOf(rs,'gct'),stride:avgOf(rs,'strideU')}))(recsIn(l)):{});
+  const HAS_CAD=FORM.some(f=>f.cad!=null),HAS_GCT=FORM.some(f=>f.gct!=null),HAS_STR=FORM.some(f=>f.stride!=null);
   const HAS_GAIN=L.some(l=>(l.ascent||0)>=1);   // a column of zeros on the treadmill or the flat says nothing
-  ['#','Section','Time','Distance',RUNS?'Avg pace':'Pace / speed',...(BEST?[RUNS?'Best pace':'Best']:[]),...(HAS_GAP?['GAP']:[]),'Avg HR','Power',...(HAS_GCT?['GCT']:[]),...(HAS_STR?['Stride']:[]),...(HAS_GAIN?['Elevation gain']:[])].forEach(h=>{const th=document.createElement('th');th.textContent=h;hr.append(th)});
+  ['#','Section','Time','Distance',RUNS?'Avg pace':'Pace / speed',...(BEST?[RUNS?'Best pace':'Best']:[]),...(HAS_GAP?['GAP']:[]),'Avg HR','Power',...(HAS_CAD?['Cadence']:[]),...(HAS_GCT?['GCT']:[]),...(HAS_STR?['Stride']:[]),...(HAS_GAIN?['Elevation gain']:[])].forEach(h=>{const th=document.createElement('th');th.textContent=h;hr.append(th)});
   L.forEach((l,i)=>{const tr=t.insertRow();tr.className='lap'+(sel.kind==='lap'&&sel.i===i?' sel':'');
     [String(i+1),NAMES[segOf(l.start+.5)],fmtDur(l.elapsed),l.dist<100?Math.round(l.dist)+' m':km(l.dist)+' '+U.dU(),
-     l.sport==='running'?fmtPace(paceOf(l.avgSpeed))+' '+U.pU():l.sport==='cycling'?U.speedMs(l.avgSpeed):'–',...(BEST?[l.sport==='running'?(bestPace(recsIn(l))||'–'):'–']:[]),...(HAS_GAP?[l.sport==='running'?(gapOf(recsIn(l))||'–'):'–']:[]),l.avgHr??'–',l.avgPower?l.avgPower+' W':'–',...(HAS_GCT?[FORM[i].gct!=null?Math.round(FORM[i].gct)+' ms':'–']:[]),...(HAS_STR?[FORM[i].stride!=null?FORM[i].stride.toFixed(2)+' '+(U.imperial()?'ft':'m'):'–']:[]),...(HAS_GAIN?[l.ascent!=null?U.elev(l.ascent):'–']:[])]
+     l.sport==='running'?fmtPace(paceOf(l.avgSpeed))+' '+U.pU():l.sport==='cycling'?U.speedMs(l.avgSpeed):'–',...(BEST?[l.sport==='running'?(bestPace(recsIn(l))||'–'):'–']:[]),...(HAS_GAP?[l.sport==='running'?(gapOf(recsIn(l))||'–'):'–']:[]),l.avgHr??'–',l.avgPower?l.avgPower+' W':'–',...(HAS_CAD?[FORM[i].cad!=null?Math.round(FORM[i].cad)+' spm':'–']:[]),...(HAS_GCT?[FORM[i].gct!=null?Math.round(FORM[i].gct)+' ms':'–']:[]),...(HAS_STR?[FORM[i].stride!=null?FORM[i].stride.toFixed(2)+' '+(U.imperial()?'ft':'m'):'–']:[]),...(HAS_GAIN?[l.ascent!=null?U.elev(l.ascent):'–']:[])]
     .forEach((c,j)=>{const td=tr.insertCell();if(j===1){const d=document.createElement('span');d.className='dot';d.style.background=colorOf(l.sport);td.append(d)}td.append(document.createTextNode(c))});
     tr.onclick=()=>{const off=sel.kind==='lap'&&sel.i===i;select(off?{kind:'all'}:{kind:'lap',i});if(!off)document.getElementById('chartscard')?.scrollIntoView({behavior:'smooth',block:'start'})};});
 }

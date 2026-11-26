@@ -1,10 +1,10 @@
 // Training log → Best efforts. Overview: every category in distance or duration order, for all time or one year.
 // Pick one to see your top 10 (one per activity); open an activity with a way back to the list; ignore spurious efforts.
 // Ignored efforts (table best_ignores) drop out of bests, trophies, profile bests, FTP and race predictions.
-import { sb, state, toast } from './main.js?v=1795593286';
-import { RUN_DISTANCES, BIKE_DISTANCES, POWER_DURATIONS, SWIM_DISTANCES } from './process.js?v=1795593286';
-import { cup } from './trophies.js?v=1795593286';
-import * as U from './units.js?v=1795593286';
+import { sb, state, toast } from './main.js?v=1795708914';
+import { RUN_DISTANCES, BIKE_DISTANCES, POWER_DURATIONS, SWIM_DISTANCES } from './process.js?v=1795708914';
+import { cup } from './trophies.js?v=1795708914';
+import * as U from './units.js?v=1795708914';
 
 const el = (tag, props = {}, ...kids) => { const e = Object.assign(document.createElement(tag), props); kids.forEach(k => k != null && e.append(k)); return e; };
 const fmtDur = s => { s = Math.round(s); const h = Math.floor(s / 3600), m = Math.floor(s % 3600 / 60), x = s % 60; return h ? `${h}:${String(m).padStart(2, '0')}:${String(x).padStart(2, '0')}` : `${m}:${String(x).padStart(2, '0')}`; };
